@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getThoughts, ThoughtEntry } from '@/lib/supabase'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -45,6 +45,57 @@ export default function AnalyticsPage() {
     }))
   }
 
+  // 感情分析データの集計（AI分析結果）
+  const getEmotionData = () => {
+    const emotionCount: { [key: string]: number } = {}
+    const analyzedThoughts = thoughts.filter(thought => thought.ai_emotion)
+    
+    analyzedThoughts.forEach(thought => {
+      if (thought.ai_emotion) {
+        emotionCount[thought.ai_emotion] = (emotionCount[thought.ai_emotion] || 0) + 1
+      }
+    })
+
+    return Object.entries(emotionCount).map(([emotion, count]) => ({
+      emotion,
+      count,
+      percentage: analyzedThoughts.length > 0 ? Math.round((count / analyzedThoughts.length) * 100) : 0
+    }))
+  }
+
+  // 感情スコアの推移（最近10件）
+  const getEmotionTrendData = () => {
+    const analyzedThoughts = thoughts
+      .filter(thought => thought.ai_emotion && thought.ai_emotion_score !== null)
+      .slice(0, 10)
+      .reverse()
+
+    return analyzedThoughts.map((thought, index) => ({
+      index: index + 1,
+      score: Math.round((thought.ai_emotion_score || 0) * 100),
+      emotion: thought.ai_emotion,
+      date: new Date(thought.created_at).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
+    }))
+  }
+
+  // テーマ分析データの集計
+  const getThemeData = () => {
+    const themeCount: { [key: string]: number } = {}
+    
+    thoughts.forEach(thought => {
+      if (thought.ai_themes && Array.isArray(thought.ai_themes)) {
+        thought.ai_themes.forEach(theme => {
+          themeCount[theme] = (themeCount[theme] || 0) + 1
+        })
+      }
+    })
+
+    return Object.entries(themeCount)
+      .map(([theme, count]) => ({ theme, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8) // 上位8テーマ
+  }
+
   // 日別データの集計（最近7日間）
   const getDailyData = () => {
     const last7Days = Array.from({length: 7}, (_, i) => {
@@ -75,6 +126,24 @@ export default function AnalyticsPage() {
     'その他': '#6B7280'      // グレー
   }
 
+  // 感情の色設定
+  const EMOTION_COLORS = {
+    'positive': '#10B981',   // 緑
+    'negative': '#EF4444',   // 赤
+    'neutral': '#6B7280',    // グレー
+    'mixed': '#F59E0B'       // オレンジ
+  }
+
+  // 感情の絵文字
+  const getEmotionEmoji = (emotion: string) => {
+    switch (emotion) {
+      case 'positive': return '😊'
+      case 'negative': return '😔'
+      case 'mixed': return '😐'
+      default: return '😌'
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto py-8 px-4">
@@ -86,22 +155,46 @@ export default function AnalyticsPage() {
   }
 
   const categoryData = getCategoryData()
+  const emotionData = getEmotionData()
+  const emotionTrendData = getEmotionTrendData()
+  const themeData = getThemeData()
   const dailyData = getDailyData()
+  const analyzedCount = thoughts.filter(thought => thought.ai_emotion).length
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 思考分析</h1>
         <p className="text-gray-600 mb-4">
-          記録された思考データの可視化とトレンド分析
+          記録された思考データの可視化とAI分析結果のトレンド分析
         </p>
-        <div className="flex gap-4">
+        
+        {/* ボタンエリア（エクスポート機能追加） */}
+        <div className="flex gap-4 flex-wrap">
           <Link href="/thoughts">
             <Button variant="outline">記録一覧を見る</Button>
           </Link>
           <Link href="/thoughts/new">
             <Button>新しい記録を作成</Button>
           </Link>
+          
+          {/* エクスポート機能 */}
+          {thoughts.length > 0 && (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => window.open('/api/export?format=csv', '_blank')}
+              >
+                📄 CSV エクスポート
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.open('/api/export?format=json', '_blank')}
+              >
+                📋 JSON エクスポート
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -133,8 +226,8 @@ export default function AnalyticsPage() {
             </Card>
             <Card>
               <CardContent className="p-6">
-                <div className="text-2xl font-bold text-green-600">{categoryData.length}</div>
-                <p className="text-sm text-gray-600">使用カテゴリ数</p>
+                <div className="text-2xl font-bold text-green-600">{analyzedCount}</div>
+                <p className="text-sm text-gray-600">AI分析済み</p>
               </CardContent>
             </Card>
             <Card>
@@ -148,61 +241,149 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-6">
                 <div className="text-2xl font-bold text-orange-600">
-                  {dailyData.reduce((sum, day) => sum + day.count, 0)}
+                  {emotionData.length > 0 ? getEmotionEmoji(emotionData[0].emotion) + ' ' + emotionData[0].emotion : '-'}
                 </div>
-                <p className="text-sm text-gray-600">過去7日間</p>
+                <p className="text-sm text-gray-600">最多感情</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* チャート */}
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* カテゴリ別円グラフ */}
-            <Card>
-              <CardHeader>
-                <CardTitle>カテゴリ別分布</CardTitle>
-                <CardDescription>思考記録のカテゴリごとの割合</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      dataKey="count"
-                      nameKey="category"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({category, percentage}) => `${category} ${percentage}%`}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={index} fill={COLORS[entry.category as keyof typeof COLORS]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+          {/* AI分析チャート */}
+          {analyzedCount > 0 && (
+            <div className="space-y-8">
+              <h2 className="text-2xl font-bold text-gray-900">🤖 AI分析結果</h2>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* 感情分析円グラフ */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>😊 感情分布</CardTitle>
+                    <CardDescription>AI分析による感情の分布</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={emotionData}
+                          dataKey="count"
+                          nameKey="emotion"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          label={({emotion, percentage}) => `${getEmotionEmoji(emotion)} ${emotion} ${percentage}%`}
+                        >
+                          {emotionData.map((entry, index) => (
+                            <Cell key={index} fill={EMOTION_COLORS[entry.emotion as keyof typeof EMOTION_COLORS]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-            {/* 日別記録数バーチャート */}
-            <Card>
-              <CardHeader>
-                <CardTitle>記録頻度（過去7日間）</CardTitle>
-                <CardDescription>日別の思考記録数の推移</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#3B82F6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                {/* 感情スコア推移 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>📈 感情スコア推移</CardTitle>
+                    <CardDescription>最近の感情スコアの変化（最新10件）</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={emotionTrendData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip 
+                          formatter={(value, name) => [`${value}%`, '感情スコア']}
+                          labelFormatter={(label) => `記録: ${label}`}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="score" 
+                          stroke="#3B82F6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* テーマ分析 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>🏷️ テーマ分析</CardTitle>
+                  <CardDescription>AIが抽出したテーマの出現頻度</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={themeData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="theme" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#8B5CF6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* 基本チャート */}
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold text-gray-900">📈 基本分析</h2>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* カテゴリ別円グラフ */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>カテゴリ別分布</CardTitle>
+                  <CardDescription>思考記録のカテゴリごとの割合</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        dataKey="count"
+                        nameKey="category"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({category, percentage}) => `${category} ${percentage}%`}
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={index} fill={COLORS[entry.category as keyof typeof COLORS]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* 日別記録数バーチャート */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>記録頻度（過去7日間）</CardTitle>
+                  <CardDescription>日別の思考記録数の推移</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dailyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#3B82F6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* カテゴリ詳細テーブル */}
