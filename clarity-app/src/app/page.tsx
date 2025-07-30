@@ -1,22 +1,34 @@
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+
+// 動的インポートでパフォーマンス最適化
+const InstallPrompt = dynamic(() => import('@/components/InstallPrompt'), {
+  ssr: false,
+  loading: () => <div className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+})
 
 export default function Home() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Clarity
+          🧠 Clarity
         </h1>
         <p className="text-xl text-gray-600 mb-8">
-          思考と感情を可視化して、自分を理解するためのアプリ
+          AI分析機能付き思考記録PWAアプリ
         </p>
         <div className="flex justify-center space-x-4">
           <Link href="/thoughts/new">
             <Button size="lg">今すぐ思考を記録する</Button>
           </Link>
         </div>
+      </div>
+
+      {/* PWAインストールプロンプト */}
+      <div className="mb-8">
+        <InstallPrompt />
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

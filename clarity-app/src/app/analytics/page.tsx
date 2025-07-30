@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getThoughts, ThoughtEntry } from '@/lib/supabase'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
   const getCategoryData = () => {
     const categoryCount: { [key: string]: number } = {}
     
-    thoughts.forEach(thought => {
+    thoughts.forEach((thought: ThoughtEntry) => {
       categoryCount[thought.category] = (categoryCount[thought.category] || 0) + 1
     })
 
@@ -48,9 +48,9 @@ export default function AnalyticsPage() {
   // 感情分析データの集計（AI分析結果）
   const getEmotionData = () => {
     const emotionCount: { [key: string]: number } = {}
-    const analyzedThoughts = thoughts.filter(thought => thought.ai_emotion)
+    const analyzedThoughts = thoughts.filter((thought: ThoughtEntry) => thought.ai_emotion)
     
-    analyzedThoughts.forEach(thought => {
+    analyzedThoughts.forEach((thought: ThoughtEntry) => {
       if (thought.ai_emotion) {
         emotionCount[thought.ai_emotion] = (emotionCount[thought.ai_emotion] || 0) + 1
       }
@@ -66,11 +66,11 @@ export default function AnalyticsPage() {
   // 感情スコアの推移（最近10件）
   const getEmotionTrendData = () => {
     const analyzedThoughts = thoughts
-      .filter(thought => thought.ai_emotion && thought.ai_emotion_score !== null)
+      .filter((thought: ThoughtEntry) => thought.ai_emotion && thought.ai_emotion_score !== null)
       .slice(0, 10)
       .reverse()
 
-    return analyzedThoughts.map((thought, index) => ({
+    return analyzedThoughts.map((thought: ThoughtEntry, index: number) => ({
       index: index + 1,
       score: Math.round((thought.ai_emotion_score || 0) * 100),
       emotion: thought.ai_emotion,
@@ -82,9 +82,9 @@ export default function AnalyticsPage() {
   const getThemeData = () => {
     const themeCount: { [key: string]: number } = {}
     
-    thoughts.forEach(thought => {
+    thoughts.forEach((thought: ThoughtEntry) => {
       if (thought.ai_themes && Array.isArray(thought.ai_themes)) {
-        thought.ai_themes.forEach(theme => {
+        (thought.ai_themes as string[]).forEach((theme: string) => {
           themeCount[theme] = (themeCount[theme] || 0) + 1
         })
       }
@@ -104,8 +104,8 @@ export default function AnalyticsPage() {
       return date.toISOString().split('T')[0] // YYYY-MM-DD形式
     }).reverse()
 
-    return last7Days.map(date => {
-      const count = thoughts.filter(thought => 
+    return last7Days.map((date: string) => {
+      const count = thoughts.filter((thought: ThoughtEntry) => 
         thought.entry_date === date
       ).length
       
@@ -159,7 +159,7 @@ export default function AnalyticsPage() {
   const emotionTrendData = getEmotionTrendData()
   const themeData = getThemeData()
   const dailyData = getDailyData()
-  const analyzedCount = thoughts.filter(thought => thought.ai_emotion).length
+  const analyzedCount = thoughts.filter((thought: ThoughtEntry) => thought.ai_emotion).length
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
@@ -270,7 +270,7 @@ export default function AnalyticsPage() {
                           cx="50%"
                           cy="50%"
                           outerRadius={80}
-                          label={({emotion, percentage}) => `${getEmotionEmoji(emotion)} ${emotion} ${percentage}%`}
+                          label={(entry: any) => `${getEmotionEmoji(entry.emotion)} ${entry.emotion} ${entry.percentage}%`}
                         >
                           {emotionData.map((entry, index) => (
                             <Cell key={index} fill={EMOTION_COLORS[entry.emotion as keyof typeof EMOTION_COLORS]} />
@@ -295,8 +295,8 @@ export default function AnalyticsPage() {
                         <XAxis dataKey="date" />
                         <YAxis domain={[0, 100]} />
                         <Tooltip 
-                          formatter={(value, name) => [`${value}%`, '感情スコア']}
-                          labelFormatter={(label) => `記録: ${label}`}
+                          formatter={(value: any) => [`${value}%`, '感情スコア']}
+                          labelFormatter={(label: any) => `記録: ${label}`}
                         />
                         <Line 
                           type="monotone" 
@@ -353,7 +353,7 @@ export default function AnalyticsPage() {
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
-                        label={({category, percentage}) => `${category} ${percentage}%`}
+                        label={(entry: any) => `${entry.category} ${entry.percentage}%`}
                       >
                         {categoryData.map((entry, index) => (
                           <Cell key={index} fill={COLORS[entry.category as keyof typeof COLORS]} />
