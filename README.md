@@ -43,7 +43,9 @@
 
 ## 🚀 デモ
 
-> **Note**: 実際のデモサイトがある場合はここにリンクを追加してください
+**🌐 ライブデモ**: [https://danserpoti.github.io/clarity-app/](https://danserpoti.github.io/clarity-app/)
+
+> **Note**: GitHub Pagesでのデモでは、バックエンドAPI（AI分析、データベース）機能は制限されます。完全な機能を体験するには、ローカル環境で実行してください。
 
 ## 📸 スクリーンショット
 
@@ -119,8 +121,19 @@ NOTION_API_KEY=your_notion_api_key
 NOTION_DATABASE_ID=your_database_id
 ```
 
-### **4. データベースセットアップ**
-Supabaseで以下のテーブルを作成：
+### **4. Supabaseデータベースセットアップ**
+
+#### **🏗️ Supabaseプロジェクト作成**
+1. **Supabaseアカウント作成**: https://supabase.com/dashboard
+2. **新しいプロジェクト作成**: "New Project" をクリック
+3. **プロジェクト設定**:
+   - Organization: 個人用を選択
+   - Name: `clarity-app`
+   - Database Password: 強力なパスワードを設定
+   - Region: 最寄りのリージョンを選択
+
+#### **📊 データベーステーブル作成**
+Supabase SQL Editorで以下のSQLを実行：
 
 ```sql
 -- 思考記録テーブル
@@ -136,11 +149,45 @@ CREATE TABLE thoughts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- インデックス作成
+-- インデックス作成（パフォーマンス向上）
 CREATE INDEX idx_thoughts_created_at ON thoughts(created_at DESC);
 CREATE INDEX idx_thoughts_category ON thoughts(category);
 CREATE INDEX idx_thoughts_emotion ON thoughts(ai_emotion);
+
+-- RLS (Row Level Security) 有効化
+ALTER TABLE thoughts ENABLE ROW LEVEL SECURITY;
+
+-- 全ユーザーがアクセス可能なポリシー（デモ用）
+CREATE POLICY "Enable all access for thoughts" ON thoughts
+FOR ALL USING (true);
 ```
+
+#### **🔑 API キー取得**
+1. **Settings** → **API** に移動
+2. 以下の値をコピー:
+   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY`
+
+#### **🔒 セキュリティ設定**
+- **Authentication** → **Settings** でメール認証を設定（オプション）
+- **Database** → **Extensions** で必要な拡張機能を有効化
+
+#### **🤖 OpenAI API設定**
+
+1. **OpenAIアカウント作成**: https://platform.openai.com/signup
+2. **API キー生成**:
+   - **API Keys** → **Create new secret key**
+   - キー名: `clarity-app`
+   - キーをコピー: `sk-...` → `OPENAI_API_KEY`
+3. **使用量制限設定**（推奨）:
+   - **Billing** → **Usage limits** で月額制限を設定
+   - 例: $10/月の制限
+
+#### **💰 コスト目安**
+- **GPT-4o-mini**: 約$0.0001/リクエスト
+- **月間1000回分析**: 約$0.10
+- **AI分析はオプション機能**のため、無効化も可能
 
 ### **5. 開発サーバーの起動**
 ```bash
@@ -249,13 +296,65 @@ npm run build
 npm run start
 ```
 
-### **Vercelデプロイ**
+### **GitHub Pagesデプロイ**
 ```bash
-# Vercel CLIでデプロイ
-vercel --prod
-
-# または環境変数を設定してGitHubデプロイ
+# 自動デプロイ: mainブランチにpushすると自動的にGitHub Pagesにデプロイ
+git push origin main
 ```
+
+GitHub Actionsが自動的に以下を実行：
+1. Node.js環境のセットアップ
+2. 依存関係のインストール
+3. 静的ファイルのビルド (`npm run build:github`)
+4. GitHub Pagesへのデプロイ
+
+### **Vercel完全版デプロイ（推奨）**
+
+#### **🚀 ワンクリックデプロイ**
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdanserpoti%2Fclarity-app&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,OPENAI_API_KEY&envDescription=Required%20environment%20variables%20for%20Clarity%20app&envLink=https%3A%2F%2Fgithub.com%2Fdanserpoti%2Fclarity-app%23setup&project-name=clarity-app&repository-name=clarity-app)
+
+#### **📋 手動デプロイ手順**
+1. **Vercelアカウント作成**: https://vercel.com/signup
+2. **GitHubリポジトリをインポート**:
+   ```bash
+   # Vercel CLI使用の場合
+   npm i -g vercel
+   vercel --prod
+   ```
+3. **環境変数設定**（Vercelダッシュボード → Settings → Environment Variables）:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+4. **デプロイ実行**: 自動デプロイまたは手動トリガー
+
+#### **✅ Vercel設定のメリット**
+- ✨ **完全なAI分析機能**
+- 💾 **Supabaseデータベース連携**
+- 🔄 **リアルタイム同期**
+- 📊 **完全なデータ可視化**
+- 🌍 **独自ドメイン対応**
+- ⚡ **エッジデプロイ（高速）**
+
+### **🥈 Netlify デプロイ（代替案）**
+
+#### **🚀 ワンクリックデプロイ**
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/danserpoti/clarity-app)
+
+#### **📋 設定手順**
+1. **Netlifyアカウント作成**: https://app.netlify.com/signup
+2. **ビルド設定**:
+   ```
+   Build command: cd clarity-app && npm run build
+   Publish directory: clarity-app/.next
+   ```
+3. **環境変数設定**: Netlify Dashboard → Site settings → Environment variables
+
+### **🥉 Railway デプロイ（フルスタック）**
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/clarity-app)
 
 ### **Docker**
 ```dockerfile

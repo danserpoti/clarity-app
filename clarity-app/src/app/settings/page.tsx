@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
-  ArrowLeft,
   Settings as SettingsIcon,
   Moon,
   Sun,
@@ -155,10 +154,6 @@ export default function SettingsPage() {
         >
           {/* ヘッダー */}
           <motion.div variants={fadeInUp} className="text-center">
-            <Link href="/" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 mb-6 group">
-              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              ホームに戻る
-            </Link>
             <motion.div
               className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white mb-6"
               whileHover={{ scale: 1.1, rotate: 360 }}

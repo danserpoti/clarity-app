@@ -24,15 +24,10 @@ export function ThemeToggle() {
           size="icon"
           className="relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300"
         >
-          <motion.div
-            initial={false}
-            animate={{ rotate: 0 }}
-            whileHover={{ rotate: 180 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </motion.div>
+          <div className="relative w-[1.2rem] h-[1.2rem]">
+            <Sun className="absolute inset-0 h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute inset-0 h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          </div>
           <span className="sr-only">テーマ切り替え</span>
         </Button>
       </DropdownMenuTrigger>

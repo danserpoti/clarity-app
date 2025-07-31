@@ -10,7 +10,6 @@ import {
   Save, 
   Loader2, 
   CheckCircle2, 
-  ArrowLeft,
   Lightbulb,
   Heart,
   TrendingUp,
@@ -27,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { saveThoughtWithAnalysis } from '@/lib/supabase'
+import { saveThoughtWithAnalysis } from '@/lib/localStorage'
 import { ThoughtAnalysis } from '@/lib/openai'
 
 const fadeInUp = {
@@ -49,7 +48,7 @@ const categoryIcons = {
   '仕事': BookOpen,
   '人間関係': Heart,
   '目標管理': Target,
-  '応募': TrendingUp,
+  '学習': TrendingUp,
   '感情': MessageCircle,
   'その他': Sparkles
 }
@@ -94,7 +93,7 @@ export default function NewThought() {
         setStep(3)
         toast({
           title: '✅ 保存完了',
-          description: '思考記録がデータベースに保存されました',
+          description: '思考記録がローカルストレージに保存されました',
           variant: 'success'
         })
       } else {
@@ -216,7 +215,7 @@ export default function NewThought() {
                 記録完了！
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300">
-                思考記録がデータベースに安全に保存されました
+                思考記録がローカルストレージに安全に保存されました
               </p>
             </motion.div>
 
@@ -357,10 +356,6 @@ export default function NewThought() {
         >
           {/* ヘッダー */}
           <motion.div variants={fadeInUp} className="text-center">
-            <Link href="/" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 mb-6 group">
-              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              ホームに戻る
-            </Link>
             <motion.div
               className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white mb-6"
               whileHover={{ scale: 1.1, rotate: 360 }}
@@ -444,10 +439,10 @@ export default function NewThought() {
                           目標管理
                         </div>
                       </SelectItem>
-                      <SelectItem value="応募">
+                      <SelectItem value="学習">
                         <div className="flex items-center">
                           <TrendingUp className="mr-2 h-4 w-4" />
-                          応募
+                          学習
                         </div>
                       </SelectItem>
                       <SelectItem value="感情">
@@ -544,7 +539,7 @@ export default function NewThought() {
                     ) : (
                       <>
                         <Save className="mr-2 h-5 w-5" />
-                        {analysis ? '分析結果も一緒に保存' : 'データベースに保存'}
+                        {analysis ? '分析結果も一緒に保存' : 'ローカルに保存'}
                       </>
                     )}
                   </Button>
@@ -606,7 +601,7 @@ export default function NewThought() {
                       </motion.div>
                     </CardTitle>
                     <CardDescription className="text-lg">
-                      保存ボタンを押すと、この分析結果もデータベースに保存されます
+                      保存ボタンを押すと、この分析結果もローカルストレージに保存されます
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -711,11 +706,11 @@ export default function NewThought() {
                   <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                 </div>
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  安全なクラウド保存
+                  ローカル保存
                 </span>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                🔒 記録内容とAI分析結果はSupabaseクラウドデータベースに暗号化されて安全に保存されます
+                💾 記録内容はブラウザのローカルストレージに安全に保存されます
               </p>
             </div>
           </motion.div>

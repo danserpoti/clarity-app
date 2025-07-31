@@ -1,0 +1,30 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "cd clarity-app && npm run build",
+  "outputDirectory": "clarity-app/.next",
+  "installCommand": "cd clarity-app && npm install",
+  "devCommand": "cd clarity-app && npm run dev",
+  "functions": {
+    "clarity-app/src/app/api/analyze/route.ts": {
+      "maxDuration": 30
+    },
+    "clarity-app/src/app/api/notion-sync/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    }
+  ]
+}

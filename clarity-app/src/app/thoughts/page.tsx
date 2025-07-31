@@ -13,7 +13,6 @@ import {
   TrendingUp, 
   BarChart3,
   Sparkles,
-  ArrowLeft,
   Eye,
   Download,
   RefreshCw,
@@ -32,7 +31,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { getThoughts, ThoughtEntry } from '@/lib/supabase'
+import { getThoughts, ThoughtEntry } from '@/lib/localStorage'
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -53,7 +52,7 @@ const categoryIcons = {
   '仕事': BookOpen,
   '人間関係': Heart,
   '目標管理': Target,
-  '応募': TrendingUp,
+  '学習': TrendingUp,
   '感情': MessageCircle,
   'その他': Sparkles
 }
@@ -245,7 +244,7 @@ export default function ThoughtsPage() {
       '仕事': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       '人間関係': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
       '目標管理': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-      '応募': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      '学習': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
       '感情': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
       'その他': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
     }
@@ -379,10 +378,6 @@ export default function ThoughtsPage() {
         >
           {/* ヘッダー */}
           <motion.div variants={fadeInUp} className="text-center">
-            <Link href="/" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 mb-6 group">
-              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              ホームに戻る
-            </Link>
             <motion.div
               className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white mb-6"
               whileHover={{ scale: 1.1, rotate: 360 }}
@@ -457,7 +452,7 @@ export default function ThoughtsPage() {
                         <SelectItem value="仕事">仕事</SelectItem>
                         <SelectItem value="人間関係">人間関係</SelectItem>
                         <SelectItem value="目標管理">目標管理</SelectItem>
-                        <SelectItem value="応募">応募</SelectItem>
+                        <SelectItem value="学習">学習</SelectItem>
                         <SelectItem value="感情">感情</SelectItem>
                         <SelectItem value="その他">その他</SelectItem>
                       </SelectContent>

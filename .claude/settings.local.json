@@ -6,7 +6,20 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx next lint:*)",
       "Bash(npm install:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git config:*)",
+      "Bash(git push:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(mv:*)",
+      "Bash(git commit:*)",
+      "Bash(npm start)",
+      "Bash(PORT=3001 npm start)"
     ],
     "deny": []
   }

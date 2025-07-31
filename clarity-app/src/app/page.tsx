@@ -54,17 +54,6 @@ export default function Home() {
         {/* 背景グラデーション */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20" />
         
-        {/* フローティング装飾 */}
-        <motion.div
-          className="absolute top-20 left-10 w-20 h-20 bg-blue-200/30 dark:bg-blue-500/20 rounded-full blur-xl"
-          animate={{ y: [-20, 20], x: [-10, 10] }}
-          transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
-        />
-        <motion.div
-          className="absolute top-40 right-20 w-32 h-32 bg-purple-200/30 dark:bg-purple-500/20 rounded-full blur-xl"
-          animate={{ y: [20, -20], x: [10, -10] }}
-          transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
-        />
         
         <div className="relative container mx-auto px-4">
           <motion.div
@@ -78,16 +67,11 @@ export default function Home() {
               variants={fadeInUp}
               className="flex justify-center items-center mb-6"
             >
-              <motion.div
-                className="relative mr-4"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 blur-md opacity-75" />
-                <div className="relative rounded-full bg-gradient-to-r from-blue-500 to-purple-600 p-4">
+              <div className="mr-4">
+                <div className="rounded-full bg-gradient-to-r from-blue-500 to-purple-600 p-4">
                   <Sparkles className="h-8 w-8 text-white" />
                 </div>
-              </motion.div>
+              </div>
               <h1 className="text-6xl md:text-7xl font-bold gradient-text">
                 Clarity
               </h1>
@@ -100,13 +84,9 @@ export default function Home() {
               AI分析機能付き思考記録PWAアプリ
             </motion.p>
             
-            <motion.p 
-              variants={fadeInUp}
-              className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto"
-            >
-              思考と感情を記録し、AIによる分析で新たな洞察を得る。
-              あなたの心の声を可視化して、より良い自分へと導きます。
-            </motion.p>
+            <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+              思考と感情を記録し、分析で新たな洞察を得るアプリです。
+            </p>
 
             {/* CTAボタン */}
             <motion.div 
@@ -114,44 +94,25 @@ export default function Home() {
               className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
             >
               <Link href="/thoughts/new">
-                <motion.div {...scaleOnHover}>
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25 px-8 py-6 text-lg group"
-                  >
-                    <motion.div
-                      whileHover={{ rotate: 180 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Plus className="mr-2 h-5 w-5" />
-                    </motion.div>
-                    今すぐ記録を始める
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </motion.div>
-                  </Button>
-                </motion.div>
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-6 text-lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  今すぐ記録を始める
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
               </Link>
               
               <Link href="/analytics">
-                <motion.div {...scaleOnHover}>
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="glass border-white/20 hover:bg-white/10 px-8 py-6 text-lg group"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.2 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <BarChart3 className="mr-2 h-5 w-5" />
-                    </motion.div>
-                    分析結果を見る
-                  </Button>
-                </motion.div>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-gray-300 dark:border-gray-600 px-8 py-6 text-lg"
+                >
+                  <BarChart3 className="mr-2 h-5 w-5" />
+                  分析結果を見る
+                </Button>
               </Link>
             </motion.div>
 
@@ -179,12 +140,9 @@ export default function Home() {
             >
               パワフルな機能
             </motion.h2>
-            <motion.p 
-              variants={fadeInUp}
-              className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto"
-            >
-              思考の記録から分析まで、すべてがひとつのアプリで完結
-            </motion.p>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              思考の記録から分析まで一つのアプリで
+            </p>
           </motion.div>
 
           <motion.div 
@@ -209,8 +167,7 @@ export default function Home() {
                     思考記録
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    日々の思考や感情を自由にカテゴリ分けして記録。
-                    いつでもどこでも、心の声を残せます。
+                    日々の思考や感情をカテゴリ分けして記録できます。
                   </p>
                   <div className="space-y-3">
                     <Link href="/thoughts/new">
@@ -244,8 +201,7 @@ export default function Home() {
                     AI分析
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    先進のAIが感情やテーマを自動分析。
-                    隠れたパターンや傾向を発見できます。
+                    AIが感情やテーマを自動分析します。
                   </p>
                   <div className="flex items-center justify-center space-x-2 text-amber-500 mb-4">
                     <Zap className="h-5 w-5" />
@@ -275,8 +231,7 @@ export default function Home() {
                     データ可視化
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    美しいチャートとグラフで思考のパターンを可視化。
-                    成長の軌跡を一目で把握できます。
+                    チャートとグラフで思考パターンを可視化します。
                   </p>
                   <Link href="/analytics">
                     <Button className="w-full bg-emerald-500 hover:bg-emerald-600">
@@ -291,112 +246,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ステータスセクション */}
-      <section className="py-20 bg-gray-50/50 dark:bg-gray-900/50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerChildren}
-            className="text-center mb-16"
-          >
-            <motion.h2 
-              variants={fadeInUp}
-              className="text-4xl font-bold text-gray-900 dark:text-white mb-4"
-            >
-              開発完了機能
-            </motion.h2>
-            <motion.p 
-              variants={fadeInUp}
-              className="text-xl text-gray-600 dark:text-gray-300"
-            >
-              すでに利用可能な機能をご確認ください
-            </motion.p>
-          </motion.div>
-
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerChildren}
-            className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-          >
-            {/* 思考入力機能 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="modern-card emotion-positive">
-                <CardContent className="p-8">
-                  <div className="flex items-center mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
-                    <h3 className="text-xl font-bold text-green-800 dark:text-green-100">
-                      思考入力機能
-                    </h3>
-                  </div>
-                  <p className="text-green-700 dark:text-green-200 mb-6">
-                    カテゴリ選択、リッチテキスト入力、自動保存機能が完成
-                  </p>
-                  <div className="flex space-x-2">
-                    <Link href="/thoughts/new">
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                        記録作成
-                      </Button>
-                    </Link>
-                    <Link href="/thoughts">
-                      <Button variant="outline" size="sm">
-                        記録一覧
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* データベース保存 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="modern-card emotion-positive">
-                <CardContent className="p-8">
-                  <div className="flex items-center mb-4">
-                    <Database className="h-8 w-8 text-green-600 mr-3" />
-                    <h3 className="text-xl font-bold text-green-800 dark:text-green-100">
-                      データベース保存
-                    </h3>
-                  </div>
-                  <p className="text-green-700 dark:text-green-200 mb-6">
-                    Supabaseクラウドデータベースに安全に永続保存
-                  </p>
-                  <div className="flex items-center text-green-600 text-sm">
-                    <Heart className="h-4 w-4 mr-2" />
-                    <span>クラウド同期対応</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* 可視化機能 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="modern-card emotion-positive">
-                <CardContent className="p-8">
-                  <div className="flex items-center mb-4">
-                    <Palette className="h-8 w-8 text-green-600 mr-3" />
-                    <h3 className="text-xl font-bold text-green-800 dark:text-green-100">
-                      データ可視化
-                    </h3>
-                  </div>
-                  <p className="text-green-700 dark:text-green-200 mb-6">
-                    円グラフ、バーチャート、トレンド分析が利用可能
-                  </p>
-                  <Link href="/analytics">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      分析を見る
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
     </div>
   )
 }

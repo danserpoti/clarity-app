@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   manifest: manifestDataUrl,
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   themeColor: "#3b82f6",
-  colorScheme: "light",
+  colorScheme: "light dark",
   robots: "index, follow",
   openGraph: {
     type: "website",
@@ -121,6 +121,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          storageKey="clarity-theme"
         >
           <Navigation />
           <main className="relative">

@@ -10,7 +10,6 @@ import {
   Calendar,
   Heart,
   Sparkles,
-  ArrowLeft,
   RefreshCw,
   Download,
   PieChart as PieChartIcon,
@@ -23,7 +22,7 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { getThoughts, ThoughtEntry } from '@/lib/supabase'
+import { getThoughts, ThoughtEntry } from '@/lib/localStorage'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
 
 export default function AnalyticsPage() {
@@ -151,7 +150,7 @@ export default function AnalyticsPage() {
     '仕事': '#3B82F6',      // 青
     '人間関係': '#10B981',   // 緑
     '目標管理': '#8B5CF6',   // 紫
-    '応募': '#F59E0B',      // オレンジ
+    '学習': '#F59E0B',      // オレンジ
     '感情': '#EF4444',      // 赤
     'その他': '#6B7280'      // グレー
   }
@@ -251,10 +250,6 @@ export default function AnalyticsPage() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="text-center"
           >
-            <Link href="/" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 mb-6 group">
-              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              ホームに戻る
-            </Link>
             <motion.div
               className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white mb-6"
               whileHover={{ scale: 1.1, rotate: 360 }}
@@ -396,7 +391,7 @@ export default function AnalyticsPage() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
                 <div className="grid md:grid-cols-4 gap-6">
-                  <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                  <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                     <CardContent className="p-6 text-center">
                       <motion.div
                         className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white mb-4 group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300"
@@ -409,7 +404,7 @@ export default function AnalyticsPage() {
                     </CardContent>
                   </Card>
                   
-                  <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                  <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                     <CardContent className="p-6 text-center">
                       <motion.div
                         className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white mb-4 group-hover:shadow-lg group-hover:shadow-green-500/25 transition-all duration-300"
@@ -423,7 +418,7 @@ export default function AnalyticsPage() {
                     </CardContent>
                   </Card>
                   
-                  <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                  <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                     <CardContent className="p-6 text-center">
                       <motion.div
                         className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white mb-4 group-hover:shadow-lg group-hover:shadow-purple-500/25 transition-all duration-300"
@@ -438,7 +433,7 @@ export default function AnalyticsPage() {
                     </CardContent>
                   </Card>
                   
-                  <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                  <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                     <CardContent className="p-6 text-center">
                       <motion.div
                         className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white mb-4 group-hover:shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300"
@@ -483,7 +478,7 @@ export default function AnalyticsPage() {
                   
                   <div className="grid md:grid-cols-2 gap-8">
                     {/* 感情分析円グラフ */}
-                    <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                    <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                       <CardHeader>
                         <CardTitle className="flex items-center text-xl font-bold">
                           <Heart className="mr-2 h-5 w-5 text-pink-500" />
@@ -535,7 +530,7 @@ export default function AnalyticsPage() {
                     </Card>
 
                     {/* 感情スコア推移 */}
-                    <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                    <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                       <CardHeader>
                         <CardTitle className="flex items-center text-xl font-bold">
                           <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
@@ -678,7 +673,7 @@ export default function AnalyticsPage() {
                 
                 <div className="grid md:grid-cols-2 gap-8">
                   {/* カテゴリ別円グラフ */}
-                  <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                  <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                     <CardHeader>
                       <CardTitle className="flex items-center text-xl font-bold">
                         <PieChartIcon className="mr-2 h-5 w-5 text-blue-500" />
@@ -730,7 +725,7 @@ export default function AnalyticsPage() {
                   </Card>
 
                   {/* 日別記録数バーチャート */}
-                  <Card className="modern-card-glass group hover:scale-105 transition-all duration-300">
+                  <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                     <CardHeader>
                       <CardTitle className="flex items-center text-xl font-bold">
                         <Calendar className="mr-2 h-5 w-5 text-green-500" />

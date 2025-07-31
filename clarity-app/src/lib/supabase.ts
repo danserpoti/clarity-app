@@ -9,7 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface ThoughtEntry {
   id: string
   content: string
-  category: '仕事' | '人間関係' | '目標管理' | '応募' | '感情' | 'その他'
+  category: '仕事' | '人間関係' | '目標管理' | '学習' | '感情' | 'その他'
   entry_date: string
   created_at: string
   updated_at: string
