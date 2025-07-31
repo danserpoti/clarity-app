@@ -1,18 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // PWA最適化設定
-  experimental: {
-    optimizeCss: true,
-  },
-  
   // パフォーマンス最適化
   compress: true,
   poweredByHeader: false,
   
   // 静的ファイル最適化
   images: {
-    optimizeCss: true,
     formats: ['image/webp', 'image/avif'],
   },
   

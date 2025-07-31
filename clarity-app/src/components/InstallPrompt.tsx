@@ -82,7 +82,7 @@ export default function InstallPrompt() {
   }
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="modern-card-glass border-blue-200/30 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-900/20 dark:to-purple-900/20 hover:scale-105 transition-all duration-300">
       <CardHeader>
         <CardTitle className="text-lg text-blue-800 flex items-center gap-2">
           📱 アプリをインストール

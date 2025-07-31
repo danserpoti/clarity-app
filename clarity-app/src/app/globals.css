@@ -3,6 +3,98 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* モダンUIカスタムプロパティ */
+:root {
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-backdrop: blur(10px);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+  
+  /* 感情分析カラー */
+  --emotion-positive: oklch(0.7 0.15 142);
+  --emotion-negative: oklch(0.65 0.2 29);
+  --emotion-neutral: oklch(0.6 0.05 225);
+  --emotion-mixed: oklch(0.7 0.12 85);
+  
+  /* グラデーション */
+  --gradient-primary: linear-gradient(135deg, oklch(0.6 0.2 240), oklch(0.65 0.25 280));
+  --gradient-secondary: linear-gradient(135deg, oklch(0.85 0.1 160), oklch(0.9 0.08 180));
+  --gradient-accent: linear-gradient(135deg, oklch(0.7 0.15 60), oklch(0.75 0.18 40));
+  
+  /* シャドウ */
+  --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-large: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-colored: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
+}
+
+.dark {
+  --glass-bg: rgba(17, 24, 39, 0.3);
+  --glass-border: rgba(75, 85, 99, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  
+  --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-large: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-colored: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+}
+
+/* Glassmorphism utility classes */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  @apply glass rounded-xl;
+}
+
+.glass-nav {
+  @apply glass border-b border-white/10 dark:border-gray-800/20;
+}
+
+/* Emotion-based styling */
+.emotion-positive {
+  background: linear-gradient(135deg, var(--emotion-positive), var(--emotion-positive));
+  border-color: var(--emotion-positive);
+}
+
+.emotion-negative {
+  background: linear-gradient(135deg, var(--emotion-negative), var(--emotion-negative));
+  border-color: var(--emotion-negative);
+}
+
+.emotion-neutral {
+  background: linear-gradient(135deg, var(--emotion-neutral), var(--emotion-neutral));
+  border-color: var(--emotion-neutral);
+}
+
+.emotion-mixed {
+  background: linear-gradient(135deg, var(--emotion-mixed), var(--emotion-mixed));
+  border-color: var(--emotion-mixed);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Modern card styles */
+.modern-card {
+  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/20 dark:border-gray-800/20 shadow-lg hover:shadow-xl transition-all duration-300;
+}
+
+.modern-card-glass {
+  @apply glass-card hover:bg-white/20 dark:hover:bg-gray-900/40 transition-all duration-300;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -118,5 +210,147 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* スムーズなスクロール */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* 選択テキストのスタイル */
+  ::selection {
+    @apply bg-blue-500/20 text-blue-900 dark:text-blue-100;
+  }
+  
+  /* スクロールバーのスタイル */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+  }
+}
+
+@layer components {
+  /* Glassmorphism コンポーネント */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-backdrop);
+    -webkit-backdrop-filter: var(--glass-backdrop);
+  }
+  
+  /* 感情テーマ */
+  .emotion-positive {
+    @apply border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20;
+    box-shadow: 0 0 0 1px var(--emotion-positive), var(--shadow-soft);
+  }
+  
+  .emotion-negative {
+    @apply border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/20;
+    box-shadow: 0 0 0 1px var(--emotion-negative), var(--shadow-soft);
+  }
+  
+  .emotion-neutral {
+    @apply border-gray-200 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/20;
+    box-shadow: 0 0 0 1px var(--emotion-neutral), var(--shadow-soft);
+  }
+  
+  .emotion-mixed {
+    @apply border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/20;
+    box-shadow: 0 0 0 1px var(--emotion-mixed), var(--shadow-soft);
+  }
+  
+  /* モダンカード */
+  .modern-card {
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-xl;
+    box-shadow: var(--shadow-medium);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .modern-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-large);
+  }
+  
+  /* グラデーション背景 */
+  .gradient-bg {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* ローディングアニメーション */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  /* パルスエフェクト */
+  .pulse-ring {
+    @apply absolute inset-0 rounded-full border-2 border-blue-400 dark:border-blue-600;
+    animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  }
+  
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.8);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+  
+  /* フローティングアニメーション */
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  /* ページトランジション */
+  .page-transition {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
