@@ -15,25 +15,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// GitHub Pages用のベースパス
+const basePath = process.env.NODE_ENV === 'production' ? '/clarity-app' : '';
+
 // PWA Manifest（Data URL形式でCORS問題を回避）
 const manifestDataUrl = `data:application/json;base64,${Buffer.from(JSON.stringify({
   name: "Clarity 思考記録",
   short_name: "Clarity",
   description: "AI分析機能付き思考記録PWAアプリ",
-  start_url: "/",
+  start_url: basePath + "/",
   display: "standalone",
   background_color: "#ffffff",
   theme_color: "#3b82f6",
   orientation: "portrait",
   icons: [
     {
-      src: "/icon-192.png",
+      src: basePath + "/icon-192.png",
       sizes: "192x192",
       type: "image/png",
       purpose: "any maskable"
     },
     {
-      src: "/icon-512.png", 
+      src: basePath + "/icon-512.png", 
       sizes: "512x512",
       type: "image/png",
       purpose: "any maskable"
@@ -65,7 +68,7 @@ export const metadata: Metadata = {
     description: "AI分析機能付き思考記録PWAアプリ",
     images: [
       {
-        url: "/icon-512.png",
+        url: basePath + "/icon-512.png",
         width: 512,
         height: 512,
         alt: "Clarity アプリアイコン"
@@ -76,7 +79,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Clarity 思考記録",
     description: "AI分析機能付き思考記録PWAアプリ",
-    images: ["/icon-512.png"]
+    images: [basePath + "/icon-512.png"]
   },
   other: {
     "mobile-web-app-capable": "yes",

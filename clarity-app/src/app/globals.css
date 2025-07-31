@@ -50,11 +50,25 @@
 }
 
 .glass-card {
-  @apply glass rounded-xl;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 0.75rem;
 }
 
 .glass-nav {
-  @apply glass border-b border-white/10 dark:border-gray-800/20;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-nav {
+  border-bottom: 1px solid rgba(75, 85, 99, 0.2);
 }
 
 /* Emotion-based styling */
@@ -88,11 +102,39 @@
 
 /* Modern card styles */
 .modern-card {
-  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/20 dark:border-gray-800/20 shadow-lg hover:shadow-xl transition-all duration-300;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.modern-card:hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.dark .modern-card {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(75, 85, 99, 0.2);
 }
 
 .modern-card-glass {
-  @apply glass-card hover:bg-white/20 dark:hover:bg-gray-900/40 transition-all duration-300;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.modern-card-glass:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .modern-card-glass:hover {
+  background: rgba(17, 24, 39, 0.4);
 }
 
 @theme inline {
