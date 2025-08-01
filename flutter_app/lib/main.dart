@@ -7,9 +7,17 @@ import 'package:provider/provider.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/add_thought_screen.dart';
+import 'screens/settings/settings_screen.dart';
 import 'services/local_database.dart';
+import 'services/privacy_service.dart';
+import 'services/background_backup_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // バックグラウンドバックアップサービスの初期化
+  await BackgroundBackupService.initialize();
+  
   runApp(const ClarityApp());
 }
 
@@ -25,10 +33,16 @@ class ClarityApp extends StatelessWidget {
           value: LocalDatabase.instance,
         ),
         
-        // 将来の状態管理プロバイダーをここに追加
-        // ChangeNotifierProvider<ThoughtProvider>(
-        //   create: (_) => ThoughtProvider(),
-        // ),
+        // プライバシー設定の提供
+        FutureProvider<PrivacySettings>(
+          create: (_) => PrivacySettings.load(),
+          initialData: PrivacySettings.instance,
+        ),
+        
+        // プライバシー設定のChangeNotifier版
+        ChangeNotifierProvider<PrivacySettings>.value(
+          value: PrivacySettings.instance,
+        ),
       ],
       child: MaterialApp(
         title: 'Clarity - 思考記録',
@@ -75,8 +89,8 @@ class ClarityApp extends StatelessWidget {
         routes: {
           '/home': (context) => const HomeScreen(),
           '/add_thought': (context) => const AddThoughtScreen(),
+          '/settings': (context) => const SettingsScreen(),
           // '/analytics': (context) => const AnalyticsScreen(),
-          // '/settings': (context) => const SettingsScreen(),
         },
       ),
     );

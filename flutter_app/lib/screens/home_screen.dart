@@ -8,6 +8,7 @@ import '../models/thought_entry.dart';
 import '../services/local_database.dart';
 import '../widgets/thought_card.dart';
 import 'add_thought_screen.dart';
+import 'settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,6 +87,17 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
             tooltip: '更新',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+            tooltip: '設定',
           ),
         ],
       ),
@@ -381,8 +393,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: '設定',
                 subtitle: 'プライバシー設定',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('設定画面は実装中です')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
                   );
                 },
               ),

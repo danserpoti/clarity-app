@@ -40,11 +40,18 @@ dependencies:
   
   # UUID生成
   uuid: ^4.5.1
+  
+  # JSON処理（Notion連携用）
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  
+  # JSON処理（Notion連携用）
+  json_serializable: ^6.8.0
+  build_runner: ^2.4.7
 
 flutter:
   # Material Design icons

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getThoughts } from '@/lib/supabase'
+import { getThoughts } from '@/lib/localStorage'
 import { syncMultipleThoughtsToNotion, syncThoughtToNotion, testNotionConnection } from '@/lib/notion'
 
 export async function POST(request: NextRequest) {

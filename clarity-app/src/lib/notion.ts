@@ -1,5 +1,5 @@
 import { Client } from '@notionhq/client'
-import { ThoughtEntry } from './supabase'
+import { ThoughtEntry } from './localStorage'
 
 // Notion クライアントの初期化
 const notion = new Client({

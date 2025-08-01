@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getThoughts } from '@/lib/supabase'
+import { getThoughts } from '@/lib/localStorage'
 
 export async function GET(request: NextRequest) {
   try {
