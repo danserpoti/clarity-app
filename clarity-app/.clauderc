@@ -1,0 +1,6 @@
+{
+  "instructions_file": "CLAUDE_INSTRUCTIONS.md",
+  "auto_read_instructions": true,
+  "check_before_major_changes": true,
+  "reminder_frequency": "session_start"
+}
