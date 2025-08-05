@@ -16,8 +16,25 @@ class ClarityApp extends StatelessWidget {
     return MaterialApp(
       title: 'Clarity - 思考記録',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
       ),
       home: const ClarityHomePage(),
     );
@@ -68,6 +85,8 @@ class _ClarityHomePageState extends State<ClarityHomePage> {
   }
 
   Widget _buildHeader() {
+    final _todayCount = _recentThoughts.where((t) => t.entryDate == DateTime.now().toString().substring(0, 10)).length;
+    
     return Column(
       children: [
         const Icon(
@@ -94,73 +113,68 @@ class _ClarityHomePageState extends State<ClarityHomePage> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blue.shade200),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Column(
-                children: [
-                  const Icon(
-                    Icons.book,
-                    color: Colors.blue,
-                    size: 24,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF42A5F5), Color(0xFF1565C0)],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$_thoughtsCount',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF42A5F5).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  Text(
-                    '思考記録',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Icon(Icons.psychology_rounded, color: Colors.white, size: 28),
+                    const SizedBox(height: 8),
+                    Text('$_thoughtsCount', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text('思考記録', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500)),
+                  ],
+                ),
               ),
-              Container(
-                width: 1,
-                height: 40,
-                color: Colors.blue.shade200,
-              ),
-              Column(
-                children: [
-                  const Icon(
-                    Icons.today,
-                    color: Colors.blue,
-                    size: 24,
+            ),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(left: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFAB47BC), Color(0xFF6A1B9A)],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_recentThoughts.where((t) => t.entryDate == DateTime.now().toString().substring(0, 10)).length}',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFAB47BC).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  Text(
-                    '今日の記録',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Icon(Icons.today_rounded, color: Colors.white, size: 28),
+                    const SizedBox(height: 8),
+                    Text('$_todayCount', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text('今日の記録', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500)),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -241,10 +255,28 @@ class _ClarityHomePageState extends State<ClarityHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        title: const Text('Clarity'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Clarity',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.black87,
+          ),
+        ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              // TODO: 設定画面への遷移
+            },
+            icon: Icon(
+              Icons.settings_rounded,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -262,19 +294,19 @@ class _ClarityHomePageState extends State<ClarityHomePage> {
               ),
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddThoughtScreen(),
-            ),
-          );
-          // 画面から戻った後、データを更新
-          _loadData();
-        },
-        tooltip: '思考を記録',
-        icon: const Icon(Icons.edit),
-        label: const Text('思考を記録'),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddThoughtScreen()),
+        ).then((_) => _loadData()),
+        icon: const Icon(Icons.edit_rounded),
+        label: const Text(
+          '思考を記録',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        ),
+        backgroundColor: Colors.blue.shade600,
+        foregroundColor: Colors.white,
+        elevation: 8,
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
       ),
     );
   }
