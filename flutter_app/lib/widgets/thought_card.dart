@@ -22,30 +22,52 @@ class ThoughtCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ヘッダー（カテゴリ・日時・アクション）
-              _buildHeader(context),
-              
-              const SizedBox(height: 12),
-              
-              // 思考内容
-              _buildContent(context),
-              
-              // AI分析結果があれば表示
-              if (thought.hasAiAnalysis) ...[
-                const SizedBox(height: 12),
-                _buildAnalysisResult(context),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ヘッダー（カテゴリ・日時・アクション）
+                _buildHeader(context),
+                
+                const SizedBox(height: 16),
+                
+                // 思考内容
+                _buildContent(context),
+                
+                // AI分析結果があれば表示
+                if (thought.hasAiAnalysis) ...[
+                  const SizedBox(height: 16),
+                  _buildAnalysisResult(context),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -65,7 +87,8 @@ class ThoughtCard extends StatelessWidget {
         Text(
           _formatDateTime(thought.createdAt),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.outline,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            fontWeight: FontWeight.w500,
           ),
         ),
         
@@ -111,29 +134,44 @@ class ThoughtCard extends StatelessWidget {
     );
   }
 
-  /// カテゴリバッジ
+  /// カテゴリバッジ（グラデーション版）
   Widget _buildCategoryBadge(BuildContext context) {
-    final color = _getCategoryColor(thought.category);
+    final gradientColors = _getCategoryGradientColors(thought.category);
     final icon = _getCategoryIcon(thought.category);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: gradientColors,
+        ),
+        borderRadius: BorderRadius.circular(20), // ピル型
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors[0].withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
+          Icon(
+            icon,
+            size: 16,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 6),
           Text(
             thought.category.displayName,
-            style: TextStyle(
-              color: color,
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -145,18 +183,15 @@ class ThoughtCard extends StatelessWidget {
   Widget _buildContent(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
-      ),
       child: Text(
         thought.content,
-        style: Theme.of(context).textTheme.bodyMedium,
-        maxLines: 4,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        maxLines: 6,
         overflow: TextOverflow.ellipsis,
       ),
     );
@@ -166,17 +201,18 @@ class ThoughtCard extends StatelessWidget {
   Widget _buildAnalysisResult(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.05),
-            Colors.purple.withOpacity(0.05),
+            Colors.blue.withValues(alpha: 0.08),
+            Colors.purple.withValues(alpha: 0.08),
           ],
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
+          color: Colors.blue.withValues(alpha: 0.15),
+          width: 1.5,
         ),
       ),
       child: Column(
@@ -218,7 +254,7 @@ class ThoughtCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _getEmotionColor(thought.aiEmotion!).withOpacity(0.1),
+                      color: _getEmotionColor(thought.aiEmotion!).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -245,7 +281,7 @@ class ThoughtCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -311,6 +347,48 @@ class ThoughtCard extends StatelessWidget {
     }
   }
 
+  /// カテゴリのグラデーション色を取得
+  List<Color> _getCategoryGradientColors(ThoughtCategory category) {
+    switch (category) {
+      case ThoughtCategory.work:
+        // 仕事: ブルー系グラデーション
+        return [
+          const Color(0xFF4facfe),
+          const Color(0xFF00f2fe),
+        ];
+      case ThoughtCategory.relationships:
+        // 人間関係: グリーン系グラデーション
+        return [
+          const Color(0xFF11998e),
+          const Color(0xFF38ef7d),
+        ];
+      case ThoughtCategory.goals:
+        // 目標: パープル系グラデーション
+        return [
+          const Color(0xFF667eea),
+          const Color(0xFF764ba2),
+        ];
+      case ThoughtCategory.learning:
+        // 学習: オレンジ系グラデーション
+        return [
+          const Color(0xFFff9a9e),
+          const Color(0xFFfecfef),
+        ];
+      case ThoughtCategory.emotions:
+        // 感情: ピンク系グラデーション
+        return [
+          const Color(0xFFf093fb),
+          const Color(0xFFf5576c),
+        ];
+      case ThoughtCategory.other:
+        // その他: グレー系グラデーション
+        return [
+          const Color(0xFF74b9ff),
+          const Color(0xFF0984e3),
+        ];
+    }
+  }
+
   /// カテゴリのアイコンを取得
   IconData _getCategoryIcon(ThoughtCategory category) {
     switch (category) {
@@ -323,7 +401,7 @@ class ThoughtCard extends StatelessWidget {
       case ThoughtCategory.learning:
         return Icons.school;
       case ThoughtCategory.emotions:
-        return Icons.favorite;
+        return Icons.favorite; // ハートアイコン
       case ThoughtCategory.other:
         return Icons.more_horiz;
     }

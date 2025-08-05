@@ -3,10 +3,15 @@
 // プライバシーファースト: 全データを端末内で管理
 
 import 'dart:async';
-import 'dart:io';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path_provider/path_provider.dart';
+
+// Web対応
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+// 削除：不要なプラットフォーム固有インポート
 
 import '../models/thought_entry.dart';
 import '../models/analysis_result.dart';
@@ -16,6 +21,7 @@ import '../models/analysis_result.dart';
 class LocalDatabase {
   static LocalDatabase? _instance;
   static Database? _database;
+  static bool _isInitialized = false;
 
   // シングルトンパターン
   LocalDatabase._internal();
@@ -32,17 +38,50 @@ class LocalDatabase {
   // テーブル名
   static const String _thoughtsTable = 'thoughts';
 
+  /// プラットフォーム固有の初期化
+  static Future<void> _initializePlatform() async {
+    if (_isInitialized) return;
+    
+    if (kIsWeb) {
+      // Web環境: sqflite_common_ffi_webを使用
+      databaseFactory = databaseFactoryFfiWeb;
+    } else if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || 
+                          defaultTargetPlatform == TargetPlatform.linux || 
+                          defaultTargetPlatform == TargetPlatform.macOS)) {
+      // Desktop環境: sqflite_common_ffiを使用
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+    // モバイル環境では標準のsqfliteを使用（追加設定不要）
+    
+    _isInitialized = true;
+  }
+
   /// データベースインスタンスの取得
   Future<Database> get database async {
+    await _initializePlatform();
     _database ??= await _initDatabase();
     return _database!;
   }
 
   /// データベースの初期化
   Future<Database> _initDatabase() async {
-    // アプリケーション専用ディレクトリを取得
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, _databaseName);
+    String path;
+    
+    if (kIsWeb) {
+      // Web環境: 固定パスを使用
+      path = _databaseName;
+    } else {
+      try {
+        // モバイル・デスクトップ環境: path_providerを使用
+        final documentsPath = await _getDocumentsPath();
+        path = join(documentsPath, _databaseName);
+      } catch (e) {
+        // フォールバック: 現在のディレクトリを使用
+        debugPrint('path_provider error: $e, using fallback path');
+        path = _databaseName;
+      }
+    }
     
     // データベースを開く（なければ作成）
     return await openDatabase(
@@ -51,6 +90,11 @@ class LocalDatabase {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+  }
+
+  // ダミー実装：プラットフォーム固有の処理は削除
+  Future<String> _getDocumentsPath() async {
+    return './'; // シンプルな相対パス
   }
 
   /// データベース作成時の処理
@@ -151,6 +195,27 @@ class LocalDatabase {
       thought.toMap(),
       where: 'id = ?',
       whereArgs: [thought.id],
+    );
+  }
+
+  /// 思考記録にAI分析結果を追加
+  Future<void> updateThoughtWithAnalysis(String id, AnalysisResult result) async {
+    final db = await database;
+    
+    await db.update(
+      _thoughtsTable,
+      {
+        'ai_emotion': result.emotion.value,
+        'ai_emotion_score': result.emotionScore,
+        'ai_themes': jsonEncode(result.themes),
+        'ai_keywords': jsonEncode(result.keywords),
+        'ai_summary': result.summary,
+        'ai_suggestion': result.suggestion,
+        'ai_analyzed_at': result.analyzedAt.toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
@@ -278,6 +343,21 @@ class LocalDatabase {
     return result.first['count'] as int;
   }
 
+  /// 今日の記録数の取得
+  Future<int> getTodayThoughtsCount() async {
+    final db = await database;
+    
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final tomorrowStart = todayStart.add(const Duration(days: 1));
+    
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM $_thoughtsTable WHERE created_at >= ? AND created_at < ?',
+      [todayStart.toIso8601String(), tomorrowStart.toIso8601String()]
+    );
+    return result.first['count'] as int;
+  }
+
   /// カテゴリ別統計の取得
   Future<Map<String, int>> getCategoryStats() async {
     final db = await database;
@@ -329,6 +409,28 @@ class LocalDatabase {
     final Map<String, int> stats = {};
     for (final map in maps) {
       stats[map['month'] as String] = map['count'] as int;
+    }
+    
+    return stats;
+  }
+
+  /// 日別思考記録数の取得（過去N日間）
+  Future<Map<String, int>> getDailyStats({int days = 30}) async {
+    final db = await database;
+    
+    final cutoffDate = DateTime.now().subtract(Duration(days: days));
+    
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT entry_date, COUNT(*) as count
+      FROM $_thoughtsTable
+      WHERE entry_date >= ?
+      GROUP BY entry_date
+      ORDER BY entry_date DESC
+    ''', [cutoffDate.toIso8601String().substring(0, 10)]);
+    
+    final Map<String, int> stats = {};
+    for (final map in maps) {
+      stats[map['entry_date'] as String] = map['count'] as int;
     }
     
     return stats;
@@ -406,19 +508,16 @@ class LocalDatabase {
   /// データベースサイズの取得（MB単位）
   Future<double> getDatabaseSize() async {
     try {
-      Directory documentsDirectory = await getApplicationDocumentsDirectory();
-      String path = join(documentsDirectory.path, _databaseName);
-      File dbFile = File(path);
-      
-      if (await dbFile.exists()) {
-        int sizeInBytes = await dbFile.length();
-        return sizeInBytes / (1024 * 1024); // MB単位に変換
-      }
-      return 0.0;
+      final db = await database;
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM $_thoughtsTable');
+      final count = result.first['count'] as int;
+      // 1レコード約1KBと仮定して計算（概算）
+      return (count * 1024) / (1024 * 1024);
     } catch (e) {
       return 0.0;
     }
   }
+
 
   /// データベースの最適化
   Future<void> optimize() async {

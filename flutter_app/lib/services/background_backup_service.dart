@@ -1,7 +1,6 @@
 // lib/services/background_backup_service.dart
 // バックグラウンドバックアップサービス - 自動Notion連携
 
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

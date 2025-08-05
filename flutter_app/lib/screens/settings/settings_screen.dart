@@ -353,13 +353,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               final apiKey = controller.text.trim();
               if (apiKey.isNotEmpty) {
+                final navigator = Navigator.of(context);
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                
                 try {
                   await _aiService.setApiKey(apiKey);
                   await _checkAiApiKey();
                   
                   if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    navigator.pop();
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(
                         content: Text('APIキーを設定しました'),
                         backgroundColor: Colors.green,
@@ -368,7 +371,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       SnackBar(
                         content: Text('APIキーの設定に失敗しました: $e'),
                         backgroundColor: Colors.red,

@@ -161,9 +161,7 @@ class PrivacySettings extends ChangeNotifier {
       enableNotionBackup = true;
       
       // 初回設定時の記録
-      if (firstBackupTime == null) {
-        firstBackupTime = DateTime.now();
-      }
+      firstBackupTime ??= DateTime.now();
       
       await save();
       
@@ -259,7 +257,7 @@ class PrivacySettings extends ChangeNotifier {
       print('データ暗号化: $enableDataEncryption');
       print('Notion連携: $enableNotionBackup');
       print('自動バックアップ: $autoBackupEnabled');
-      print('バックアップ間隔: ${autoBackupIntervalDays}日');
+      print('バックアップ間隔: $autoBackupIntervalDays日');
       print('認証情報設定済み: $hasNotionCredentials');
       print('総バックアップ数: $totalBackupsCount');
       print('成功バックアップ数: $successfulBackupsCount');

@@ -1,7 +1,6 @@
 // lib/services/notion_service.dart
 // Notion API統合サービス - プライバシー重視のバックアップ機能
 
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -318,7 +317,7 @@ class BackupResult {
   @override
   String toString() {
     if (isSuccess) {
-      String result = 'バックアップ成功: ${backedUpCount}件';
+      String result = 'バックアップ成功: $backedUpCount件';
       if (hasPartialErrors) {
         result += ' (エラー: ${partialErrors!.length}件)';
       }

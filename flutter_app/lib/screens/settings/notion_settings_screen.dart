@@ -350,7 +350,7 @@ class _NotionSettingsScreenState extends State<NotionSettingsScreen> {
                   DropdownButton<int>(
                     value: settings.autoBackupIntervalDays,
                     items: [1, 3, 7, 14, 30].map((days) {
-                      String label = days == 1 ? '毎日' : '${days}日ごと';
+                      String label = days == 1 ? '毎日' : '$days日ごと';
                       return DropdownMenuItem(
                         value: days,
                         child: Text(label),
@@ -480,6 +480,8 @@ class _NotionSettingsScreenState extends State<NotionSettingsScreen> {
 
     setState(() => _isConnecting = true);
 
+    final settings = context.read<PrivacySettings>();
+    
     try {
       final apiKey = _apiKeyController.text.trim();
       final databaseId = _databaseIdController.text.trim();
@@ -497,7 +499,6 @@ class _NotionSettingsScreenState extends State<NotionSettingsScreen> {
       }
 
       // 設定保存
-      final settings = context.read<PrivacySettings>();
       await settings.setNotionCredentials(
         apiKey: apiKey,
         databaseId: databaseId,
@@ -594,9 +595,10 @@ class _NotionSettingsScreenState extends State<NotionSettingsScreen> {
           TextButton(
             onPressed: () async {
               final settings = context.read<PrivacySettings>();
+              final navigator = Navigator.of(context);
               await settings.clearNotionCredentials();
               if (mounted) {
-                Navigator.pop(context);
+                navigator.pop();
                 _showSnackBar('Notion連携を解除しました', isSuccess: true);
               }
             },
