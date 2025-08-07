@@ -49,16 +49,29 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     });
 
     try {
-      final db = context.read<LocalDatabase>();
+      final db = LocalDatabase.instance;
 
-      // 並行してデータを取得
+      // データベースの初期化を待機（タイムアウト付き）
+      await db.database.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('データベースの初期化がタイムアウトしました');
+        },
+      );
+
+      // 並行してデータを取得（タイムアウト付き）
       final results = await Future.wait([
         db.getAllThoughts(),
         db.getTotalThoughtsCount(),
         db.getAnalyzedThoughtsCount(),
         db.getTodayThoughtsCount(),
         db.getCategoryStats(),
-      ]);
+      ]).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception('データの取得がタイムアウトしました');
+        },
+      );
 
       final allThoughts = results[0] as List<ThoughtEntry>;
       final total = results[1] as int;
@@ -75,8 +88,19 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         _isLoading = false;
       });
     } catch (e) {
+      String errorMessage = 'データの読み込みに失敗しました';
+      
+      // エラーメッセージを分かりやすくする
+      if (e.toString().contains('タイムアウト')) {
+        errorMessage = 'データベースの初期化に時間がかかりすぎています。ページを再読み込みしてください。';
+      } else if (e.toString().contains('localStorage')) {
+        errorMessage = 'Web環境でのデータベース初期化に失敗しました。ブラウザの設定を確認してください。';
+      } else if (e.toString().contains('sqflite')) {
+        errorMessage = 'データベースの初期化に失敗しました。アプリを再起動してください。';
+      }
+      
       setState(() {
-        _error = 'データの読み込みに失敗しました: $e';
+        _error = '$errorMessage\n\n詳細: $e';
         _isLoading = false;
       });
     }
@@ -126,7 +150,16 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       ),
       
       body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('データを読み込み中...'),
+                ],
+              ),
+            )
           : _error != null
               ? _buildErrorWidget()
               : _buildContent(),
@@ -168,14 +201,23 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
             ),
             const SizedBox(height: 16),
             Text(
+              'データの読み込みに失敗しました',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
               _error!,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: _loadData,
-              child: const Text('再試行'),
+              icon: const Icon(Icons.refresh),
+              label: const Text('再試行'),
             ),
           ],
         ),

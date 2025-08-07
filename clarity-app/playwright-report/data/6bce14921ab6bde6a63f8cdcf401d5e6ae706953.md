@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- alert
+- navigation:
+  - link "Clarity":
+    - /url: /
+  - link "ホーム":
+    - /url: /
+  - link "記録一覧":
+    - /url: /thoughts
+  - link "分析":
+    - /url: /analytics
+  - link "設定":
+    - /url: /settings
+  - link "新規記録":
+    - /url: /thoughts/new
+  - button "テーマ切り替え"
+- main:
+  - heading "Clarity" [level=1]
+  - paragraph: AI分析機能付き思考記録PWAアプリ
+  - paragraph: 思考と感情を記録し、分析で新たな洞察を得るアプリです。
+  - link "今すぐ記録を始める":
+    - /url: /thoughts/new
+    - button "今すぐ記録を始める"
+  - link "分析結果を見る":
+    - /url: /analytics
+    - button "分析結果を見る"
+  - heading "パワフルな機能" [level=2]
+  - paragraph: 思考の記録から分析まで一つのアプリで
+  - heading "思考記録" [level=3]
+  - paragraph: 日々の思考や感情をカテゴリ分けして記録できます。
+  - link "新しい記録を作成":
+    - /url: /thoughts/new
+    - button "新しい記録を作成"
+  - link "記録一覧を見る":
+    - /url: /thoughts
+    - button "記録一覧を見る"
+  - heading "AI分析" [level=3]
+  - paragraph: AIが感情やテーマを自動分析します。
+  - text: 利用可能
+  - link "AI分析を見る":
+    - /url: /analytics
+    - button "AI分析を見る"
+  - heading "データ可視化" [level=3]
+  - paragraph: チャートとグラフで思考パターンを可視化します。
+  - link "分析結果を見る":
+    - /url: /analytics
+    - button "分析結果を見る"
+- region "Notifications (F8)":
+  - list
+```

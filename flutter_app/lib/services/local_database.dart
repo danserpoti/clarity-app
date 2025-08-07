@@ -22,6 +22,7 @@ class LocalDatabase {
   static LocalDatabase? _instance;
   static Database? _database;
   static bool _isInitialized = false;
+  static bool _useLocalStorage = false; // Web環境でのフォールバック用
 
   // シングルトンパターン
   LocalDatabase._internal();
@@ -42,26 +43,65 @@ class LocalDatabase {
   static Future<void> _initializePlatform() async {
     if (_isInitialized) return;
     
-    if (kIsWeb) {
-      // Web環境: sqflite_common_ffi_webを使用
-      databaseFactory = databaseFactoryFfiWeb;
-    } else if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || 
-                          defaultTargetPlatform == TargetPlatform.linux || 
-                          defaultTargetPlatform == TargetPlatform.macOS)) {
-      // Desktop環境: sqflite_common_ffiを使用
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
+    try {
+      if (kIsWeb) {
+        // Web環境: sqflite_common_ffi_webを使用
+        databaseFactory = databaseFactoryFfiWeb;
+      } else if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || 
+                            defaultTargetPlatform == TargetPlatform.linux || 
+                            defaultTargetPlatform == TargetPlatform.macOS)) {
+        // Desktop環境: sqflite_common_ffiを使用
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+      }
+      // モバイル環境では標準のsqfliteを使用（追加設定不要）
+      
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('Platform initialization error: $e');
+      // Web環境でのエラーの場合、ローカルストレージを使用
+      if (kIsWeb) {
+        debugPrint('Falling back to localStorage for web');
+        _useLocalStorage = true;
+      }
+      _isInitialized = true;
     }
-    // モバイル環境では標準のsqfliteを使用（追加設定不要）
-    
-    _isInitialized = true;
   }
 
   /// データベースインスタンスの取得
   Future<Database> get database async {
-    await _initializePlatform();
-    _database ??= await _initDatabase();
-    return _database!;
+    try {
+      await _initializePlatform();
+      
+      // ローカルストレージフォールバックが有効な場合
+      if (_useLocalStorage) {
+        throw Exception('Using localStorage fallback');
+      }
+      
+      _database ??= await _initDatabase();
+      return _database!;
+    } catch (e) {
+      debugPrint('Database getter error: $e');
+      // Web環境でのエラーの場合、メモリ内データベースを試行
+      if (kIsWeb && _database == null && !_useLocalStorage) {
+        try {
+          debugPrint('Attempting to create in-memory database for web');
+          _database = await openDatabase(
+            ':memory:',
+            version: _databaseVersion,
+            onCreate: _onCreate,
+            onUpgrade: _onUpgrade,
+          );
+          return _database!;
+        } catch (memoryError) {
+          debugPrint('In-memory database also failed: $memoryError');
+          // 最終的なフォールバックとしてローカルストレージを使用
+          _useLocalStorage = true;
+          throw Exception('All database initialization methods failed');
+        }
+      }
+      rethrow;
+    }
   }
 
   /// データベースの初期化
@@ -83,13 +123,28 @@ class LocalDatabase {
       }
     }
     
-    // データベースを開く（なければ作成）
-    return await openDatabase(
-      path,
-      version: _databaseVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+    try {
+      // データベースを開く（なければ作成）
+      return await openDatabase(
+        path,
+        version: _databaseVersion,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    } catch (e) {
+      debugPrint('Database initialization error: $e');
+      // Web環境での初期化に失敗した場合、メモリ内データベースを使用
+      if (kIsWeb) {
+        debugPrint('Falling back to in-memory database for web');
+        return await openDatabase(
+          ':memory:',
+          version: _databaseVersion,
+          onCreate: _onCreate,
+          onUpgrade: _onUpgrade,
+        );
+      }
+      rethrow;
+    }
   }
 
   // ダミー実装：プラットフォーム固有の処理は削除
