@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../models/thought_entry.dart';
 import '../services/local_database.dart';
+import '../services/web_storage_service.dart';
 import '../widgets/thought_card.dart';
 import '../utils/responsive_helper.dart';
 import '../utils/page_transitions.dart';
@@ -34,6 +35,10 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   int _analyzedCount = 0;
   int _todayCount = 0;
   Map<String, int> _categoryStats = {};
+  
+  // リトライ機能
+  int _retryCount = 0;
+  static const int _maxRetries = 3;
 
   @override
   void initState() {
@@ -41,16 +46,65 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     _loadData();
   }
 
-  /// データの読み込み
+  /// データの読み込み（自動リトライ機能付き）
   Future<void> _loadData() async {
+    await _loadDataWithRetry();
+  }
+
+  /// リトライ機能付きデータ読み込み
+  Future<void> _loadDataWithRetry({bool isRetry = false}) async {
     setState(() {
       _isLoading = true;
-      _error = null;
+      if (!isRetry) {
+        _error = null;
+        _retryCount = 0;
+      }
     });
 
     try {
       final db = LocalDatabase.instance;
 
+      // プラットフォーム初期化を確実に実行
+      await LocalDatabase.initializePlatform();
+
+      // localStorage使用時はWebStorageServiceを直接使用
+      if (LocalDatabase.isUsingLocalStorage) {
+        final webStorage = LocalDatabase.webStorageInstance;
+        if (webStorage == null) {
+          // WebStorageServiceが未初期化の場合、初期化を試行
+          await LocalDatabase.initializeWebStorage();
+          final retryWebStorage = LocalDatabase.webStorageInstance;
+          if (retryWebStorage == null) {
+            throw Exception('WebStorageServiceが初期化されていません');
+          }
+        }
+
+        // WebStorageServiceから直接データを取得
+        final activeWebStorage = webStorage ?? LocalDatabase.webStorageInstance!;
+        final results = await Future.wait([
+          activeWebStorage.getAllThoughts(),
+          activeWebStorage.getTotalThoughtsCount(),
+          activeWebStorage.getAnalyzedThoughtsCount(),
+          activeWebStorage.getTodayThoughtsCount(),
+          activeWebStorage.getCategoryStats(),
+        ]).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () {
+            throw Exception('データの取得がタイムアウトしました');
+          },
+        );
+
+        final allThoughts = results[0] as List<ThoughtEntry>;
+        final total = results[1] as int;
+        final analyzed = results[2] as int;
+        final today = results[3] as int;
+        final categoryStats = results[4] as Map<String, int>;
+
+        _updateState(allThoughts, total, analyzed, today, categoryStats);
+        return;
+      }
+
+      // SQLite使用時の従来処理
       // データベースの初期化を待機（タイムアウト付き）
       await db.database.timeout(
         const Duration(seconds: 10),
@@ -79,14 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       final today = results[3] as int;
       final categoryStats = results[4] as Map<String, int>;
 
-      setState(() {
-        _recentThoughts = allThoughts.take(5).toList(); // 最新5件
-        _totalCount = total;
-        _analyzedCount = analyzed;
-        _todayCount = today;
-        _categoryStats = categoryStats;
-        _isLoading = false;
-      });
+      _updateState(allThoughts, total, analyzed, today, categoryStats);
     } catch (e) {
       String errorMessage = 'データの読み込みに失敗しました';
       
@@ -99,11 +146,37 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         errorMessage = 'データベースの初期化に失敗しました。アプリを再起動してください。';
       }
       
+      // 自動リトライ機能
+      if (_retryCount < _maxRetries) {
+        _retryCount++;
+        debugPrint('データ読み込み失敗 (試行 $_retryCount/$_maxRetries): $e');
+        
+        // 段階的な遅延でリトライ（1秒、2秒、3秒）
+        await Future.delayed(Duration(seconds: _retryCount));
+        
+        // リトライ実行
+        await _loadDataWithRetry(isRetry: true);
+        return;
+      }
+
+      // 最大リトライ回数に達した場合のエラー処理
       setState(() {
-        _error = '$errorMessage\n\n詳細: $e';
+        _error = '$errorMessage (${_retryCount}回試行)\n\n詳細: $e';
         _isLoading = false;
       });
     }
+  }
+
+  /// データ状態の更新
+  void _updateState(List<ThoughtEntry> allThoughts, int total, int analyzed, int today, Map<String, int> categoryStats) {
+    setState(() {
+      _recentThoughts = allThoughts.take(5).toList(); // 最新5件
+      _totalCount = total;
+      _analyzedCount = analyzed;
+      _todayCount = today;
+      _categoryStats = categoryStats;
+      _isLoading = false;
+    });
   }
 
   /// 分析率の計算
@@ -189,11 +262,13 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   /// エラー表示ウィジェット
   Widget _buildErrorWidget() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
             const Icon(
               Icons.error_outline,
               size: 64,
@@ -221,6 +296,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
             ),
           ],
         ),
+      ),
       ),
     );
   }

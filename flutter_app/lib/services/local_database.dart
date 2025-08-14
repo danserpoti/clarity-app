@@ -15,6 +15,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../models/thought_entry.dart';
 import '../models/analysis_result.dart';
+import 'web_storage_service.dart';
 
 /// ローカルデータベース管理クラス
 /// SQLiteを使用した完全ローカル保存
@@ -23,6 +24,7 @@ class LocalDatabase {
   static Database? _database;
   static bool _isInitialized = false;
   static bool _useLocalStorage = false; // Web環境でのフォールバック用
+  static WebStorageService? _webStorage;
 
   // シングルトンパターン
   LocalDatabase._internal();
@@ -30,6 +32,23 @@ class LocalDatabase {
   static LocalDatabase get instance {
     _instance ??= LocalDatabase._internal();
     return _instance!;
+  }
+
+  /// localStorage使用状態の確認
+  static bool get isUsingLocalStorage => _useLocalStorage;
+
+  /// WebStorageServiceインスタンスの取得
+  static WebStorageService? get webStorageInstance => _webStorage;
+
+  /// プラットフォーム初期化を公開（リトライ用）
+  static Future<void> initializePlatform() async {
+    await _initializePlatform();
+  }
+
+  /// WebStorageService初期化を公開（リトライ用）
+  static Future<void> initializeWebStorage() async {
+    final instance = LocalDatabase.instance;
+    await instance._initWebStorage();
   }
 
   // データベース定数
@@ -43,13 +62,18 @@ class LocalDatabase {
   static Future<void> _initializePlatform() async {
     if (_isInitialized) return;
     
+    if (kIsWeb) {
+      // Web環境: SQLiteを試行せずにローカルストレージを直接使用
+      debugPrint('Web detected: Using localStorage directly');
+      _useLocalStorage = true;
+      _isInitialized = true;
+      return;
+    }
+    
     try {
-      if (kIsWeb) {
-        // Web環境: sqflite_common_ffi_webを使用
-        databaseFactory = databaseFactoryFfiWeb;
-      } else if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || 
-                            defaultTargetPlatform == TargetPlatform.linux || 
-                            defaultTargetPlatform == TargetPlatform.macOS)) {
+      if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || 
+                      defaultTargetPlatform == TargetPlatform.linux || 
+                      defaultTargetPlatform == TargetPlatform.macOS)) {
         // Desktop環境: sqflite_common_ffiを使用
         sqfliteFfiInit();
         databaseFactory = databaseFactoryFfi;
@@ -59,11 +83,6 @@ class LocalDatabase {
       _isInitialized = true;
     } catch (e) {
       debugPrint('Platform initialization error: $e');
-      // Web環境でのエラーの場合、ローカルストレージを使用
-      if (kIsWeb) {
-        debugPrint('Falling back to localStorage for web');
-        _useLocalStorage = true;
-      }
       _isInitialized = true;
     }
   }
@@ -75,6 +94,7 @@ class LocalDatabase {
       
       // ローカルストレージフォールバックが有効な場合
       if (_useLocalStorage) {
+        await _initWebStorage();
         throw Exception('Using localStorage fallback');
       }
       
@@ -97,6 +117,7 @@ class LocalDatabase {
           debugPrint('In-memory database also failed: $memoryError');
           // 最終的なフォールバックとしてローカルストレージを使用
           _useLocalStorage = true;
+          await _initWebStorage();
           throw Exception('All database initialization methods failed');
         }
       }
@@ -152,6 +173,15 @@ class LocalDatabase {
     return './'; // シンプルな相対パス
   }
 
+  /// WebStorageServiceの初期化
+  Future<void> _initWebStorage() async {
+    if (_webStorage == null) {
+      _webStorage = WebStorageService.instance;
+      await _webStorage!.initialize();
+      debugPrint('WebStorageService initialized as fallback');
+    }
+  }
+
   /// データベース作成時の処理
   Future<void> _onCreate(Database db, int version) async {
     // thoughts テーブル作成
@@ -203,6 +233,10 @@ class LocalDatabase {
 
   /// 思考記録の挿入
   Future<String> insertThought(ThoughtEntry thought) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.insertThought(thought);
+    }
+    
     final db = await database;
     
     await db.insert(
@@ -216,6 +250,10 @@ class LocalDatabase {
 
   /// 全思考記録の取得（作成日時降順）
   Future<List<ThoughtEntry>> getAllThoughts() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getAllThoughts();
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.query(
@@ -228,6 +266,10 @@ class LocalDatabase {
 
   /// IDによる思考記録の取得
   Future<ThoughtEntry?> getThought(String id) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getThought(id);
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.query(
@@ -243,6 +285,10 @@ class LocalDatabase {
 
   /// 思考記録の更新
   Future<int> updateThought(ThoughtEntry thought) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.updateThought(thought);
+    }
+    
     final db = await database;
     
     return await db.update(
@@ -255,6 +301,10 @@ class LocalDatabase {
 
   /// 思考記録にAI分析結果を追加
   Future<void> updateThoughtWithAnalysis(String id, AnalysisResult result) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.updateThoughtWithAnalysis(id, result);
+    }
+    
     final db = await database;
     
     await db.update(
@@ -276,6 +326,10 @@ class LocalDatabase {
 
   /// 思考記録の削除
   Future<int> deleteThought(String id) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.deleteThought(id);
+    }
+    
     final db = await database;
     
     return await db.delete(
@@ -287,6 +341,10 @@ class LocalDatabase {
 
   /// 全思考記録の削除（データリセット用）
   Future<int> deleteAllThoughts() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.deleteAllThoughts();
+    }
+    
     final db = await database;
     return await db.delete(_thoughtsTable);
   }
@@ -297,6 +355,10 @@ class LocalDatabase {
 
   /// カテゴリによる思考記録の取得
   Future<List<ThoughtEntry>> getThoughtsByCategory(ThoughtCategory category) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getThoughtsByCategory(category);
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.query(
@@ -311,6 +373,10 @@ class LocalDatabase {
 
   /// 感情による思考記録の取得
   Future<List<ThoughtEntry>> getThoughtsByEmotion(EmotionType emotion) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getThoughtsByEmotion(emotion);
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.query(
@@ -328,6 +394,10 @@ class LocalDatabase {
     DateTime startDate,
     DateTime endDate,
   ) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getThoughtsByDateRange(startDate, endDate);
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.query(
@@ -345,6 +415,10 @@ class LocalDatabase {
 
   /// キーワード検索（内容・要約・提案を対象）
   Future<List<ThoughtEntry>> searchThoughts(String keyword) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.searchThoughts(keyword);
+    }
+    
     final db = await database;
     
     final String searchPattern = '%$keyword%';
@@ -365,6 +439,10 @@ class LocalDatabase {
 
   /// AI分析済みの思考記録の取得
   Future<List<ThoughtEntry>> getAnalyzedThoughts() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getAnalyzedThoughts();
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.query(
@@ -382,6 +460,10 @@ class LocalDatabase {
 
   /// 総記録数の取得
   Future<int> getTotalThoughtsCount() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getTotalThoughtsCount();
+    }
+    
     final db = await database;
     
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM $_thoughtsTable');
@@ -390,6 +472,10 @@ class LocalDatabase {
 
   /// AI分析済み記録数の取得
   Future<int> getAnalyzedThoughtsCount() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getAnalyzedThoughtsCount();
+    }
+    
     final db = await database;
     
     final result = await db.rawQuery(
@@ -400,6 +486,10 @@ class LocalDatabase {
 
   /// 今日の記録数の取得
   Future<int> getTodayThoughtsCount() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getTodayThoughtsCount();
+    }
+    
     final db = await database;
     
     final now = DateTime.now();
@@ -415,6 +505,10 @@ class LocalDatabase {
 
   /// カテゴリ別統計の取得
   Future<Map<String, int>> getCategoryStats() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getCategoryStats();
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -433,6 +527,10 @@ class LocalDatabase {
 
   /// 感情別統計の取得
   Future<Map<String, int>> getEmotionStats() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getEmotionStats();
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -452,6 +550,10 @@ class LocalDatabase {
 
   /// 月別思考記録数の取得
   Future<Map<String, int>> getMonthlyStats() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getMonthlyStats();
+    }
+    
     final db = await database;
     
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -471,6 +573,10 @@ class LocalDatabase {
 
   /// 日別思考記録数の取得（過去N日間）
   Future<Map<String, int>> getDailyStats({int days = 30}) async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getDailyStats(days: days);
+    }
+    
     final db = await database;
     
     final cutoffDate = DateTime.now().subtract(Duration(days: days));
@@ -493,6 +599,10 @@ class LocalDatabase {
 
   /// 平均感情スコアの取得
   Future<double> getAverageEmotionScore() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getAverageEmotionScore();
+    }
+    
     final db = await database;
     
     final result = await db.rawQuery('''
@@ -507,6 +617,10 @@ class LocalDatabase {
 
   /// 分析統計情報の取得
   Future<AnalysisStats> getAnalysisStats() async {
+    if (_useLocalStorage && _webStorage != null) {
+      return await _webStorage!.getAnalysisStats();
+    }
+    
     final totalAnalyzed = await getAnalyzedThoughtsCount();
     final emotionStatsMap = await getEmotionStats();
     
