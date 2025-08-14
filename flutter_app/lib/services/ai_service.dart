@@ -3,6 +3,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -17,8 +18,8 @@ import '../models/analysis_result.dart';
 class AIService {
   static const String _baseUrl = 'https://api.openai.com/v1';
   static const String _model = 'gpt-4o-mini';
-  static const int _maxTokens = 500;
-  static const double _temperature = 0.7;
+  static const int _maxTokens = 800;
+  static const double _temperature = 0.3;
   
   // セキュアストレージ
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
@@ -34,23 +35,36 @@ class AIService {
   Future<bool> hasApiKey() async {
     try {
       final apiKey = await _secureStorage.read(key: _apiKeyStorageKey);
-      return apiKey != null && apiKey.isNotEmpty;
+      final hasKey = apiKey != null && apiKey.isNotEmpty;
+      debugPrint('APIキー状態確認: ${hasKey ? "設定済み" : "未設定"} (長さ: ${apiKey?.length ?? 0})');
+      return hasKey;
     } catch (e) {
+      debugPrint('APIキー確認エラー: $e');
       return false;
     }
   }
   
   /// APIキーを設定
   Future<void> setApiKey(String apiKey) async {
+    debugPrint('APIキー設定開始');
+    
     if (apiKey.trim().isEmpty) {
+      debugPrint('APIキー設定エラー: 空のキー');
       throw ArgumentError('APIキーが空です');
     }
     
     if (!apiKey.startsWith('sk-')) {
+      debugPrint('APIキー設定エラー: 無効な形式');
       throw ArgumentError('無効なAPIキー形式です');
     }
     
-    await _secureStorage.write(key: _apiKeyStorageKey, value: apiKey.trim());
+    try {
+      await _secureStorage.write(key: _apiKeyStorageKey, value: apiKey.trim());
+      debugPrint('APIキー設定完了: 長さ=${apiKey.trim().length}');
+    } catch (e) {
+      debugPrint('APIキー設定エラー: $e');
+      rethrow;
+    }
   }
   
   /// APIキーを削除
@@ -60,20 +74,33 @@ class AIService {
   
   /// APIキーを取得（内部使用）
   Future<String?> _getApiKey() async {
-    return await _secureStorage.read(key: _apiKeyStorageKey);
+    try {
+      final apiKey = await _secureStorage.read(key: _apiKeyStorageKey);
+      debugPrint('APIキー取得: ${apiKey != null ? "成功(長さ: ${apiKey.length})" : "失敗(null)"}');
+      return apiKey;
+    } catch (e) {
+      debugPrint('APIキー取得エラー: $e');
+      return null;
+    }
   }
   
   /// 思考内容のAI分析
   /// プライバシー配慮: 個人識別情報は一切送信しない
   Future<AnalysisResult?> analyzeThought(String content, ThoughtCategory category) async {
+    debugPrint('AI分析開始: カテゴリ=${category.displayName}, 内容長=${content.length}');
+    
     if (content.trim().isEmpty) {
+      debugPrint('AI分析エラー: 内容が空');
       throw ArgumentError('分析対象の内容が空です');
     }
     
     final apiKey = await _getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
+      debugPrint('AI分析エラー: APIキー未設定');
       throw StateError('APIキーが設定されていません');
     }
+    
+    debugPrint('AI分析: APIキー確認済み、API呼び出し開始');
     
     try {
       // リクエスト準備
@@ -94,44 +121,91 @@ class AIService {
     }
   }
   
+  /// 思考分析特化プロンプトの構築
+  static String _buildThoughtAnalysisPrompt(String content) {
+    return '''
+あなたは経験豊富な心理カウンセラーです。以下の思考内容を深い共感力で分析し、実践的なアドバイスを提供してください：
+
+「${content}」
+
+以下のJSON形式で正確に回答してください：
+{
+  "emotion": "positive/negative/neutral/mixed",
+  "emotionScore": 0.8,
+  "themes": ["主要テーマ1", "主要テーマ2"],
+  "keywords": ["キーワード1", "キーワード2", "キーワード3"],
+  "summary": "共感的な要約（50文字以内）",
+  "suggestion": "建設的なアドバイス（120文字以内）"
+}
+
+【共感の表現】
+- 「それは本当に大変でしたね」「よく頑張りましたね」「その気持ち、よく分かります」
+- 「誰でもそう感じるのは自然です」「あなたの反応は当然です」
+- 「この状況で〇〇と感じるのは、とても理解できます」
+
+【アドバイスの方針】
+- ネガティブな感情：深い共感→感情の正当性を認める→具体的な次の一歩を3つ提案
+- ポジティブな感情：その成功を祝福→その勢いを活かす具体的な行動を3つ提案
+- 中性的な感情：その冷静さを評価→より深い洞察や成長の機会を3つ提案
+
+【アドバイスの構成】
+1. 共感の言葉（「それは大変でしたね」など）
+2. 感情の正当性を認める（「その反応は自然です」など）
+3. 具体的な次のステップ（3つ程度）
+4. 励ましの言葉（「一歩ずつ進んでいきましょう」など）
+
+【アドバイスの例】
+- ネガティブ：「それは本当に大変でしたね。その気持ち、よく分かります。この経験から学んだことを活かして、次は〇〇してみませんか？また、〇〇も効果的かもしれません。一歩ずつ進んでいきましょう。」
+- ポジティブ：「素晴らしい成果ですね！その調子で、さらに〇〇に挑戦してみてはいかがでしょうか？また、〇〇もおすすめです。この勢いを大切にしてください。」
+- 中性：「その冷静な視点は素晴らしいです。この状況を〇〇の観点から見直してみると、新しい発見があるかもしれません。また、〇〇も検討してみてください。」
+
+JSON形式以外は出力しないでください。
+''';
+  }
+
   /// 分析リクエストの構築
   Map<String, dynamic> _buildAnalysisRequest(String content, ThoughtCategory category) {
     // プライバシー重視のシステムプロンプト
     final systemPrompt = '''
-あなたは思考分析の専門家です。プライバシーを最重視し、以下の原則に従ってください：
+あなたは経験豊富な心理カウンセラーです。深い共感力と実践的なアドバイスで、ユーザーの心の成長をサポートします。
 
 【プライバシー原則】
 - 個人識別情報は一切記録・保存しない
 - 分析内容を他の目的で使用しない
 - セッション終了後は全て忘却する
 
-【分析タスク】
-ユーザーの思考内容を分析し、以下のJSON形式で応答してください：
+【共感の基本姿勢】
+- ユーザーの感情を100%受け入れ、否定しない
+- 「それは大変でしたね」「よく頑張りましたね」など、共感の言葉を必ず含める
+- ユーザーの視点に立って、その状況を理解する
+- 感情の強さや複雑さを認め、軽視しない
 
-{
-  "emotion": "positive|negative|neutral|mixed",
-  "emotion_score": 0.0-1.0の信頼度,
-  "themes": ["テーマ1", "テーマ2", ...],
-  "keywords": ["キーワード1", "キーワード2", ...],
-  "summary": "内容の要約（50文字以内）",
-  "suggestion": "建設的な提案やアドバイス（100文字以内）"
-}
+【分析方針】
+- 表面的な感情の奥にある本質的なニーズを見抜く
+- ユーザーの強みや過去の成功体験を思い出させる
+- 現在の困難を成長の機会として再定義する
+- ユーザーの価値観や目標に沿ったアドバイスを提供
 
-【注意事項】
-- 感情は必ずpositive/negative/neutral/mixedのいずれか
-- テーマとキーワードは日本語で5個以内
-- 提案は前向きで建設的なものに
-- JSON形式厳守、余計な説明は不要
+【アドバイスの基本姿勢】
+- まず深い共感を示し、その後で具体的な解決策を提案
+- ユーザーの感情を認め、その感情が自然であることを伝える
+- 現在の状況を成長の機会として捉える視点を提供
+- 具体的で実践可能な次のステップを3つ程度提案
+- ユーザーの強みや可能性を引き出す質問を含める
+- 「一歩前に進む」ための勇気と希望を与える
+- 完璧を求めず、小さな進歩を大切にする姿勢を伝える
+
+JSON形式で正確に回答し、JSON以外は出力しないでください。
 ''';
     
+    // 新しい思考分析プロンプトを使用（カテゴリ情報を含めて調整）
     final userPrompt = '''
 カテゴリ: ${category.displayName}
-思考内容: $content
 
-上記の思考内容を分析してください。
+${_buildThoughtAnalysisPrompt(content)}
 ''';
     
-    return {
+    final requestData = {
       'model': _model,
       'messages': [
         {
@@ -147,11 +221,25 @@ class AIService {
       'temperature': _temperature,
       'response_format': {'type': 'json_object'},
     };
+    
+    debugPrint('OpenAI APIリクエスト構築:');
+    debugPrint('- モデル: ${requestData['model']}');
+    debugPrint('- max_tokens: ${requestData['max_tokens']}');
+    debugPrint('- temperature: ${requestData['temperature']}');
+    debugPrint('- response_format: ${requestData['response_format']}');
+    debugPrint('- メッセージ数: ${(requestData['messages'] as List).length}');
+    
+    return requestData;
   }
   
   /// OpenAI API呼び出し
   Future<Map<String, dynamic>> _callOpenAI(Map<String, dynamic> request, String apiKey) async {
     final uri = Uri.parse('$_baseUrl/chat/completions');
+    
+    debugPrint('OpenAI API呼び出し開始:');
+    debugPrint('- URL: $uri');
+    debugPrint('- 使用モデル: ${request['model']}');
+    debugPrint('- APIキー長: ${apiKey.length}文字');
     
     final response = await http.post(
       uri,
@@ -162,6 +250,9 @@ class AIService {
       body: jsonEncode(request),
     ).timeout(const Duration(seconds: 30));
     
+    debugPrint('OpenAI APIレスポンス: ステータス=${response.statusCode}');
+    debugPrint('レスポンスボディ: ${response.body}');
+    
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else if (response.statusCode == 401) {
@@ -169,9 +260,15 @@ class AIService {
     } else if (response.statusCode == 429) {
       throw APIException('API利用制限に達しました。しばらく待ってから再試行してください');
     } else {
-      final errorBody = jsonDecode(response.body) as Map<String, dynamic>;
-      final errorMessage = errorBody['error']?['message'] ?? 'Unknown error';
-      throw APIException('API呼び出し失敗 (${response.statusCode}): $errorMessage');
+      try {
+        final errorBody = jsonDecode(response.body) as Map<String, dynamic>;
+        final errorMessage = errorBody['error']?['message'] ?? 'Unknown error';
+        debugPrint('エラー詳細: $errorMessage');
+        throw APIException('API呼び出し失敗 (${response.statusCode}): $errorMessage');
+      } catch (e) {
+        debugPrint('エラーレスポンスの解析に失敗: $e');
+        throw APIException('API呼び出し失敗 (${response.statusCode}): ${response.body}');
+      }
     }
   }
   

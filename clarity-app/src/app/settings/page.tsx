@@ -72,7 +72,7 @@ export default function SettingsPage() {
       autoAnalysis: true,
       emotionTracking: true,
       insights: true,
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
     }
   })
 
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="gpt-4">GPT-4</SelectItem>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
                         <SelectItem value="gpt-3.5">GPT-3.5</SelectItem>
                         <SelectItem value="claude">Claude</SelectItem>
                       </SelectContent>
