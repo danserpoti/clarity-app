@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "name": "clarity-backend-api",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "@openai-api-key",
+    "KV_URL": "@kv-rest-api-url",
+    "KV_REST_API_TOKEN": "@kv-rest-api-token"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+}

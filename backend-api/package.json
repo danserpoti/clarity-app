@@ -1,0 +1,36 @@
+{
+  "name": "clarity-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API for Clarity thought tracking app with AI analysis using GPT-5-mini-2025-08-07",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "test": "node --test"
+  },
+  "keywords": [
+    "clarity",
+    "ai-analysis",
+    "thought-tracking",
+    "vercel",
+    "openai",
+    "gpt-5"
+  ],
+  "author": "Clarity Team",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.73.0",
+    "@vercel/kv": "^3.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^37.16.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clarity-team/clarity-backend-api"
+  },
+  "private": true
+}
