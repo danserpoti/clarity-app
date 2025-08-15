@@ -24,8 +24,23 @@
       "Bash(flutter pub add:*)",
       "Bash(flutter create:*)",
       "Bash(flutter pub:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(flutter:*)",
+      "Bash(set GIT_DIR=)",
+      "Bash(where flutter)",
+      "Bash(export:*)",
+      "Bash(git --version)",
+      "Bash(/c/tools/flutter/bin/flutter run -d chrome)",
+      "Bash(echo $PATH)",
+      "Bash(/c/tools/flutter/bin/flutter pub get)",
+      "Bash(cmd /c:*)",
+      "Bash(ln:*)",
+      "Bash(cp:*)",
+      "Bash(PATH=\"$PATH:/mingw64/bin\" flutter run -d chrome)",
+      "Bash(vercel:*)",
+      "Bash(git init:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

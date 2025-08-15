@@ -296,7 +296,7 @@ class ThoughtCard extends StatelessWidget {
             ),
           ],
           
-          // 要約（短縮版）
+          // 要約
           if (thought.aiSummary != null && thought.aiSummary!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -304,8 +304,59 @@ class ThoughtCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontStyle: FontStyle.italic,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          
+          // AI提案・アドバイス（メイン表示）
+          if (thought.aiSuggestion != null && thought.aiSuggestion!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.amber.withValues(alpha: 0.1),
+                    Colors.orange.withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb,
+                        size: 16,
+                        color: Colors.amber.shade700,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'アドバイス',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Colors.amber.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    thought.aiSuggestion!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],

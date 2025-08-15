@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/thought_entry.dart';
+import '../models/usage_info.dart';
 import '../services/local_database.dart';
 import '../services/web_storage_service.dart';
+import '../services/ai_service.dart';
 import '../widgets/thought_card.dart';
+import '../widgets/usage_counter_widget.dart';
 import '../utils/responsive_helper.dart';
 import '../utils/page_transitions.dart';
 import '../utils/accessibility_helper.dart';
@@ -35,6 +38,10 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   int _analyzedCount = 0;
   int _todayCount = 0;
   Map<String, int> _categoryStats = {};
+  
+  // AI使用量情報
+  UsageInfo? _usageInfo;
+  final AIService _aiService = AIService();
   
   // リトライ機能
   int _retryCount = 0;
@@ -101,6 +108,9 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         final categoryStats = results[4] as Map<String, int>;
 
         _updateState(allThoughts, total, analyzed, today, categoryStats);
+        
+        // AI使用量情報を取得（非同期・エラー無視）
+        _loadUsageInfo();
         return;
       }
 
@@ -134,6 +144,9 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       final categoryStats = results[4] as Map<String, int>;
 
       _updateState(allThoughts, total, analyzed, today, categoryStats);
+      
+      // AI使用量情報を取得（非同期・エラー無視）
+      _loadUsageInfo();
     } catch (e) {
       String errorMessage = 'データの読み込みに失敗しました';
       
@@ -177,6 +190,21 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       _categoryStats = categoryStats;
       _isLoading = false;
     });
+  }
+  
+  /// AI使用量情報の読み込み
+  Future<void> _loadUsageInfo() async {
+    try {
+      final usageInfo = await _aiService.getUsageInfo();
+      if (mounted) {
+        setState(() {
+          _usageInfo = usageInfo;
+        });
+      }
+    } catch (e) {
+      // エラーは無視（使用量情報はオプション）
+      debugPrint('使用量情報の読み込みに失敗: $e');
+    }
   }
 
   /// 分析率の計算
@@ -370,6 +398,15 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
           ],
         ),
         const SizedBox(height: 16),
+        
+        // 使用量表示（フル幅）
+        if (_usageInfo != null) ...[
+          UsageCounterWidget(
+            usageInfo: _usageInfo,
+            size: UsageCounterSize.standard,
+          ),
+          const SizedBox(height: 16),
+        ],
         
         Row(
           children: [

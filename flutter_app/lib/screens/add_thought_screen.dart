@@ -4,10 +4,12 @@ import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import '../models/thought_entry.dart';
 import '../models/analysis_result.dart';
+import '../models/usage_info.dart';
 import '../services/simple_data_service.dart';
 import '../services/local_database.dart';
 import '../services/ai_service.dart';
 import '../services/privacy_service.dart';
+import '../widgets/usage_counter_widget.dart';
 
 class AddThoughtScreen extends StatefulWidget {
   const AddThoughtScreen({super.key});
@@ -25,6 +27,7 @@ class _AddThoughtScreenState extends State<AddThoughtScreen> {
   bool _isAnalyzing = false;
   bool _enableAIAnalysis = false;
   bool _hasAiApiKey = false;
+  UsageInfo? _usageInfo;
 
   final List<String> _categories = [
     '仕事',
@@ -52,10 +55,28 @@ class _AddThoughtScreenState extends State<AddThoughtScreen> {
     final privacySettings = Provider.of<PrivacySettings>(context, listen: false);
     final hasApiKey = await _aiService.hasApiKey();
     
+    // 使用量情報を非同期で取得（エラーは無視）
+    _loadUsageInfo();
+    
     setState(() {
       _hasAiApiKey = hasApiKey;
       _enableAIAnalysis = privacySettings.enableAIAnalysis && hasApiKey;
     });
+  }
+  
+  /// 使用量情報の読み込み
+  Future<void> _loadUsageInfo() async {
+    try {
+      final usageInfo = await _aiService.getUsageInfo();
+      if (mounted) {
+        setState(() {
+          _usageInfo = usageInfo;
+        });
+      }
+    } catch (e) {
+      // エラーは無視（使用量情報はオプション）
+      debugPrint('使用量情報の読み込みに失敗: $e');
+    }
   }
 
   void _saveThought() async {
@@ -102,14 +123,37 @@ class _AddThoughtScreenState extends State<AddThoughtScreen> {
                 thoughtEntry.id,
                 analysisResult,
               );
+              
+              // 使用量情報を更新
+              _loadUsageInfo();
             }
           } catch (aiError) {
-            // AI分析エラーは警告として処理（保存は成功）
+            // AI分析エラーの詳細処理
             if (mounted) {
+              String errorMessage;
+              Color backgroundColor = Colors.orange;
+              
+              if (aiError.toString().contains('UsageLimitException')) {
+                errorMessage = '月間使用量上限に達しました。来月まで少しお待ちください。';
+                backgroundColor = Colors.red;
+              } else if (aiError.toString().contains('RateLimitException')) {
+                errorMessage = 'リクエスト制限に達しました。しばらく待ってから再試行してください。';
+                backgroundColor = Colors.orange;
+              } else if (aiError.toString().contains('NetworkException')) {
+                errorMessage = 'ネットワーク接続を確認してください。';
+                backgroundColor = Colors.red;
+              } else if (aiError.toString().contains('ServiceUnavailableException')) {
+                errorMessage = 'AI分析サービスが一時的に利用できません。';
+                backgroundColor = Colors.orange;
+              } else {
+                errorMessage = 'AI分析に失敗しました: $aiError';
+              }
+              
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('AI分析に失敗しました: $aiError'),
-                  backgroundColor: Colors.orange,
+                  content: Text(errorMessage),
+                  backgroundColor: backgroundColor,
+                  duration: const Duration(seconds: 4),
                 ),
               );
             }
@@ -127,12 +171,14 @@ class _AddThoughtScreenState extends State<AddThoughtScreen> {
               : '思考を保存しました';
           
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
+            const SnackBar(
+              content: Text('思考記録を保存しました'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
             ),
           );
-          Navigator.pop(context);
+          // 🚀 保存成功をホーム画面に通知
+          Navigator.pop(context, true);
         }
       } catch (e) {
         if (mounted) {
@@ -250,6 +296,34 @@ class _AddThoughtScreenState extends State<AddThoughtScreen> {
                               ),
                             ],
                           ),
+                          
+                          // 使用量表示（コンパクト）
+                          if (_enableAIAnalysis && _usageInfo != null) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.analytics_outlined,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '使用量:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                UsageCounterWidget(
+                                  usageInfo: _usageInfo,
+                                  size: UsageCounterSize.compact,
+                                ),
+                              ],
+                            ),
+                          ],
+                          
                           if (_enableAIAnalysis) ...[
                             const SizedBox(height: 8),
                             Text(

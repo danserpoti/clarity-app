@@ -19,9 +19,10 @@ class PrivacySettings extends ChangeNotifier {
     ),
   );
 
-  // AI分析設定
+  // AI分析設定（バックエンドAPI使用）
   bool enableAIAnalysis = true;
   bool enableDataEncryption = true;
+  bool showUsageStats = true;
   
   // Notion連携設定
   bool enableNotionBackup = false;
@@ -64,6 +65,7 @@ class PrivacySettings extends ChangeNotifier {
         // 基本設定
         enableAIAnalysis = data['enableAIAnalysis'] ?? true;
         enableDataEncryption = data['enableDataEncryption'] ?? true;
+        showUsageStats = data['showUsageStats'] ?? true;
         
         // Notion設定
         enableNotionBackup = data['enableNotionBackup'] ?? false;
@@ -115,6 +117,7 @@ class PrivacySettings extends ChangeNotifier {
       final settingsData = {
         'enableAIAnalysis': enableAIAnalysis,
         'enableDataEncryption': enableDataEncryption,
+        'showUsageStats': showUsageStats,
         'enableNotionBackup': enableNotionBackup,
         'autoBackupEnabled': autoBackupEnabled,
         'autoBackupIntervalDays': autoBackupIntervalDays,
